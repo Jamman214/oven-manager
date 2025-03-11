@@ -1,9 +1,13 @@
 from flask import Flask
+import os
 from dotenv import dotenv_values
 
 app = Flask(__name__)
 
-secrets = dotenv_values('.env')
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+env_path = os.path.join(BASE_DIR, '.env')
+secrets = dotenv_values(env_path)
+
 app.secret_key = secrets['APP_SECRET_KEY']
 
 @app.route("/")
