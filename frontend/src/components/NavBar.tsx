@@ -1,71 +1,19 @@
-// return (
-//     <nav className="navbar bg-dark navbar-expand-sm" data-bs-theme="dark">
-//         <div className="container-fluid">
-//             <a className="navbar-brand" href="#">
-//                 Oven Manager
-//             </a>
-
-//             <button
-//                 className="navbar-toggler"
-//                 type="button"
-//                 data-bs-toggle="collapse"
-//                 data-bs-target="#navbarNav"
-//                 aria-controls="navbarNav"
-//                 aria-expanded="false"
-//                 aria-label="Toggle navigation"
-//             >
-//                 <span className="navbar-toggler-icon"></span>
-//             </button>
-
-//             <div className="collapse navbar-collapse" id="navbarNav">
-//                 <ul className="navbar-nav">
-//                     {navs.map((item, index) => {
-//                         return (
-//                             <li className="nav-item" key={index}>
-//                                 <a
-//                                     className={
-//                                         "nav-link" +
-//                                         (index === selectedNav
-//                                             ? " active"
-//                                             : "")
-//                                     }
-//                                     aria-current={
-//                                         index === selectedNav && "page"
-//                                     }
-//                                     href="#"
-//                                     onClick={() => {
-//                                         setSelectedNav(index);
-//                                     }}
-//                                 >
-//                                     {item}
-//                                 </a>
-//                             </li>
-//                         );
-//                     })}
-//                 </ul>
-//             </div>
-//         </div>
-//     </nav>
-// );
-
-import { useState } from "react";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
+import { NavLink } from "react-router-dom";
 
-interface ItemProps {
+interface TextRefPair {
     text: string;
-    href: string;
+    link: string;
 }
 
 interface Props {
-    heading: string;
-    items: ItemProps[];
+    brand: TextRefPair;
+    items: TextRefPair[];
 }
 
-function NavBar({ heading, items }: Props) {
-    const [selectedNav, setSelectedNav] = useState(0);
-
+function NavBar({ brand, items }: Props) {
     return (
         <Navbar
             expand="lg"
@@ -73,27 +21,18 @@ function NavBar({ heading, items }: Props) {
             data-bs-theme="dark"
         >
             <Container fluid>
-                <Navbar.Brand href="#home">{heading}</Navbar.Brand>
+                <Navbar.Brand as={NavLink} to={brand.link}>
+                    {brand.text}
+                </Navbar.Brand>
 
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
 
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="me-auto">
-                        {items.map(({ text, href }: ItemProps, index) => {
+                        {items.map((item: TextRefPair, index) => {
                             return (
-                                <Nav.Link
-                                    href={href}
-                                    className={
-                                        selectedNav === index ? "active" : ""
-                                    }
-                                    aria-current={
-                                        index === selectedNav && "page"
-                                    }
-                                    onClick={() => {
-                                        setSelectedNav(index);
-                                    }}
-                                >
-                                    {text}
+                                <Nav.Link as={NavLink} to={item.link}>
+                                    {item.text}
                                 </Nav.Link>
                             );
                         })}
