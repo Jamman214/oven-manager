@@ -31,7 +31,11 @@ function NavBar({ brand, items }: Props) {
                     <Nav className="me-auto">
                         {items.map((item: TextRefPair, index) => {
                             return (
-                                <Nav.Link as={NavLink} to={item.link}>
+                                <Nav.Link
+                                    as={NavLink}
+                                    to={item.link}
+                                    key={index}
+                                >
                                     {item.text}
                                 </Nav.Link>
                             );
