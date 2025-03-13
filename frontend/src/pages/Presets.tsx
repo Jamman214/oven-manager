@@ -8,7 +8,17 @@ function Presets() {
 
     useEffect(() => {
         if (shouldFetch) {
-            fetch("/api/test")
+            fetch("/api/test", {
+                method: "POST",
+                body: JSON.stringify({
+                    title: "foo",
+                    body: "bar",
+                    userId: 1,
+                }),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                },
+            })
                 .then((res) => res.text())
                 .then((data) => {
                     setText(data);
