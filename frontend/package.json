@@ -7,8 +7,7 @@
         "dev": "vite",
         "build": "tsc -b && vite build",
         "lint": "eslint .",
-        "preview": "vite preview",
-        "start-api": "cd .. && run_flask.bat"
+        "preview": "vite preview"
     },
     "dependencies": {
         "bootstrap": "^5.3.3",
