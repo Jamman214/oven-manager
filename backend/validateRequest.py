@@ -1,8 +1,6 @@
-from collections.abc import Iterable
-from typing import Callable, TypeVar, Optional, TypeAlias, Type, overload, Any, get_args, Generic, Union
-from types import NoneType
+from typing import overload, Any, Callable, Optional, Type, TypeAlias, TypeVar, Union
 from flask import Request
-from abc import ABC, abstractmethod
+from abc import abstractmethod, ABC
 
 
 JsonSAN = TypeVar('JsonSAN', str, float, int, bool, None) # Json Schema Atomic Node
