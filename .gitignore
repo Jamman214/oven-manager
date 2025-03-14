@@ -3,3 +3,4 @@
 *.sh
 *.bat
 __pycache__/
+.vscode
