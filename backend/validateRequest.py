@@ -5,8 +5,11 @@ from abc import abstractmethod, ABC
 
 JsonSAN = TypeVar('JsonSAN', str, float, int, bool, None) # Json Schema Atomic Node
 JsonSCN = TypeVar('JsonSCN', bound = Union['ListSchema','DictSchema']) # Json Schema Compound Node
+
 JsonNode: TypeAlias = Type[JsonSAN] | JsonSCN
-JsonNodeConstrained: TypeAlias = JsonNode | 'ConstraintSchema'      
+
+JsonNodeConstrained: TypeAlias = Type[str] | Type[float] | Type[int] | Type[bool] | Type[None] | 'ListSchema' | 'DictSchema' | 'ConstraintSchema'
+JsonNC = TypeVar('JsonNC', Type[str], Type[float], Type[int], Type[bool], Type[None], 'ListSchema', 'DictSchema', 'ConstraintSchema')
 
 T = TypeVar('T')
 Predicate: TypeAlias = Callable[[T],bool]
@@ -55,8 +58,8 @@ class ConstraintSchema(JsonSchema):
 
 class ListSchema(JsonSchema):
     # Used to represent a JSON array
-    def __init__(self, child_node: JsonNodeConstrained):
-        self.child_node = child_node
+    def __init__(self, child_node: JsonNC):
+        self.child_node: JsonNodeConstrained = child_node
         
     def validate(self, json_node: Any) -> ValidationResult:
         if type(json_node) != list:
@@ -97,7 +100,8 @@ def compare_json_types(schema_node: JsonNodeConstrained, json_node: Any) -> Vali
     return False, f"Expected type {schema_node}, got type {type(json_node)}"
 
 
-def validate_json_request(schema_node: JsonNodeConstrained, request: Request) -> ValidationResult:
+def validate_json_request(schema_node: JsonNodeConstrained, 
+                          request: Request) -> ValidationResult:
     if not request.is_json:
         return False, "Expected JSON"
     return compare_json_types(schema_node, request.get_json())
