@@ -1,5 +1,12 @@
+import Container from "react-bootstrap/Container";
+import { Outlet } from "react-router-dom";
+
 function Presets() {
-    return <p>Presets</p>;
+    return (
+        <Container fluid>
+            <Outlet />
+        </Container>
+    );
 }
 
 export default Presets;

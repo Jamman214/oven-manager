@@ -2,39 +2,73 @@ import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import { NavLink } from "react-router-dom";
+import { useState } from "react";
+import NavDropdown from "react-bootstrap/NavDropdown";
 
 interface TextRefPair {
     text: string;
     link: string;
 }
 
+interface TextRefPairDropdown {
+    text: string;
+    subitems: TextRefPair[];
+}
+
+type NavItem = TextRefPair | TextRefPairDropdown;
+
 interface Props {
     brand: TextRefPair;
-    items: TextRefPair[];
+    items: NavItem[];
 }
 
 function NavBar({ brand, items }: Props) {
+    const [expanded, setExpanded] = useState(false);
+
     return (
-        <Navbar
-            expand="lg"
-            className="bg-dark navbar-expand-sm"
-            data-bs-theme="dark"
-        >
+        <Navbar expand="sm" expanded={expanded}>
             <Container fluid>
-                <Navbar.Brand as={NavLink} to={brand.link}>
+                <Navbar.Brand
+                    as={NavLink}
+                    to={brand.link}
+                    onClick={() => setExpanded(false)}
+                >
                     {brand.text}
                 </Navbar.Brand>
 
-                <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                <Navbar.Toggle
+                    aria-controls="navbar"
+                    onClick={() => setExpanded(!expanded)}
+                />
 
-                <Navbar.Collapse id="basic-navbar-nav">
-                    <Nav className="me-auto">
-                        {items.map((item: TextRefPair, index) => {
+                <Navbar.Collapse id="navbar">
+                    <Nav>
+                        {items.map((item: NavItem, i) => {
+                            if ("subitems" in item) {
+                                return (
+                                    <NavDropdown title={item.text} key={i}>
+                                        {item.subitems.map(
+                                            (subitem: TextRefPair, j) => {
+                                                return (
+                                                    <NavDropdown.Item
+                                                        as={NavLink}
+                                                        to={subitem.link}
+                                                        key={j}
+                                                    >
+                                                        {subitem.text}
+                                                    </NavDropdown.Item>
+                                                );
+                                            }
+                                        )}
+                                    </NavDropdown>
+                                );
+                            }
                             return (
                                 <Nav.Link
                                     as={NavLink}
                                     to={item.link}
-                                    key={index}
+                                    key={i}
+                                    onClick={() => setExpanded(false)}
                                 >
                                     {item.text}
                                 </Nav.Link>
