@@ -5,10 +5,10 @@ import ConfigPage from "./pages/Config";
 import PresetsPage from "./pages/Presets";
 import HistoryPage from "./pages/History";
 import PresetSingle from "./pages/presets/Single";
+import PresetMultiple from "./pages/presets/Multiple";
 import { useEffect } from "react";
 
 import "./scss/app.scss";
-// import "./app.css";
 
 function App() {
     useEffect(() => {
@@ -36,7 +36,7 @@ function App() {
                 <Route path="/config" element={<ConfigPage />} />
                 <Route path="/presets" element={<PresetsPage />}>
                     <Route path="single" element={<PresetSingle />} />
-                    <Route path="multiple" element={<></>} />
+                    <Route path="multiple" element={<PresetMultiple />} />
                 </Route>
 
                 <Route path="/history" element={<HistoryPage />} />
