@@ -23,7 +23,7 @@ interface Props {
 }
 
 function NavBar({ brand, items }: Props) {
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState<boolean>(false);
 
     return (
         <Navbar expand="sm" expanded={expanded}>
@@ -54,6 +54,11 @@ function NavBar({ brand, items }: Props) {
                                                         as={NavLink}
                                                         to={subitem.link}
                                                         key={j}
+                                                        onClick={() =>
+                                                            setExpanded(
+                                                                !expanded
+                                                            )
+                                                        }
                                                     >
                                                         {subitem.text}
                                                     </NavDropdown.Item>
