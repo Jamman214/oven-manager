@@ -189,7 +189,7 @@ function PresetSingle() {
             {coreAndOvenInputs}
             <Row className="d-flex justify-content-center">
                 <Col xs={6} className="text-center">
-                    <Button type="submit">Save Settings</Button>
+                    <Button type="submit">Save Preset</Button>
                 </Col>
             </Row>
         </Form>
