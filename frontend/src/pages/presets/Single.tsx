@@ -166,7 +166,6 @@ function PresetSingle() {
         if (!isSubmitting) {
             return;
         }
-        console.log("issubmitting: ", isSubmitting);
         handleSubmit(onSubmit)(formEvent);
         setSubmitting(false);
     }, [isSubmitting]);
