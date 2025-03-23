@@ -1,49 +1,67 @@
 import { useEffect, useState } from "react";
 import Form from "react-bootstrap/Form";
 import { SetStateAction } from "react";
+import { UseFormRegister, FieldValues } from "react-hook-form";
+
+type RegisterData = {
+    value: number | string;
+    onChange: (value: string) => void;
+    onBlur: () => void;
+};
 
 interface Item {
-    id: string;
+    id: number;
     name: string;
 }
 
 interface fetchData {
     route: string;
-    setFinished?: React.Dispatch<SetStateAction<boolean>>;
-    setData?: React.Dispatch<SetStateAction<Item[]>>;
+    returnFinished?: React.Dispatch<SetStateAction<boolean>>;
+    returnData?: React.Dispatch<SetStateAction<Item[]>>;
     required?: boolean;
+    registerData?: RegisterData;
 }
 
 interface fetchedData {
     data: Item[];
     required?: boolean;
+    registerData?: RegisterData;
 }
 
 type Params = fetchData | fetchedData;
 
-function FetchDropdown(params: fetchData) {
+function FetchDropdown({
+    route,
+    returnFinished = () => {},
+    returnData = () => {},
+    required = false,
+    registerData = {
+        value: -1,
+        onChange: () => {},
+        onBlur: () => {},
+    },
+}: fetchData) {
     const [data, setData] = useState<Item[]>([]);
 
     useEffect(() => {
-        fetch(params.route)
+        fetch(route)
             .then((response) => response.json())
             .then((data) => {
                 setData(data);
-                if (params.setFinished) {
-                    params.setFinished(true);
-                }
-                if (params.setData) {
-                    params.setData(data);
-                }
+                returnFinished(true);
+                returnData(data);
             });
-    }, []);
+    }, [route, returnFinished, returnData]);
 
     return (
         <Form.Select
-            aria-label="Default select example"
-            {...("required" in params && { required: params.required })}
+            aria-label="Dropdown"
+            required={required}
+            value={registerData.value}
+            onChange={(e) => registerData.onChange(e.target.value)}
+            onBlur={registerData.onBlur}
         >
-            <option value="">Select a preset</option>
+            <option value={-1}>Select a preset</option>
             {data.map((item) => {
                 return (
                     <option key={item.id} value={item.id}>
@@ -55,14 +73,25 @@ function FetchDropdown(params: fetchData) {
     );
 }
 
-function FetchedDropdown(params: fetchedData) {
+function FetchedDropdown({
+    data,
+    required = false,
+    registerData = {
+        value: -1,
+        onChange: () => {},
+        onBlur: () => {},
+    },
+}: fetchedData) {
     return (
         <Form.Select
-            aria-label="Default select example"
-            {...("required" in params && { required: params.required })}
+            aria-label="Dropdown"
+            required={required}
+            value={registerData.value}
+            onChange={(e) => registerData.onChange(e.target.value)}
+            onBlur={registerData.onBlur}
         >
-            <option value="">Select a preset</option>
-            {params.data.map((item) => {
+            <option value={-1}>Select a preset</option>
+            {data.map((item) => {
                 return (
                     <option key={item.id} value={item.id}>
                         {item.name}
