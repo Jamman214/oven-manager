@@ -44,14 +44,14 @@ function FetchDropdown({
     const [data, setData] = useState<Item[]>([]);
 
     useEffect(() => {
-        fetch(route)
+        fetch(route, { method: "GET" })
             .then((response) => response.json())
             .then((data) => {
                 setData(data);
                 returnFinished(true);
                 returnData(data);
             });
-    }, [route, returnFinished, returnData]);
+    }, [route]);
 
     return (
         <Form.Select
