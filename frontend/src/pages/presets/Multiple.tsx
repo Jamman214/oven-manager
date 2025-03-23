@@ -19,9 +19,13 @@ interface Item {
 }
 
 function PresetMultiple() {
-    const [data, setData] = useState<Item[]>([]);
+    // Options from fetched dropdown
+    const [options, returnOptions] = useState<Item[]>([]);
+
+    // Status of submission
     const [isSubmitting, setSubmitting] = useState<boolean>(false);
 
+    // Schema for dropdowns to force a selection
     const dropdownSchema = z.coerce
         .number()
         .refine((val) => val >= 0, { message: "Select a preset", path: [] });
@@ -65,7 +69,7 @@ function PresetMultiple() {
                 },
                 { message: "Invalid time", path: [] }
             ),
-        dropdown: dropdownSchema,
+        preset: dropdownSchema,
     });
 
     // Define the form schema with validation
@@ -113,13 +117,29 @@ function PresetMultiple() {
         mode: "onChange",
     });
 
+    // Setup field array for dynamic times and presets added to form
     const { fields, append, remove } = useFieldArray({
         control,
         name: "followingPresets",
     });
 
+    // Form submission logic
+    const [dataToSend, sendData] = useState<FormValues>();
+
+    useEffect(() => {
+        if (!dataToSend) return;
+        fetch("/api/set-preset/multiple", {
+            method: "POST",
+            body: JSON.stringify(dataToSend),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8",
+            },
+        });
+    }, [dataToSend]);
+
     const onSubmit = (data: FormValues) => {
         console.log("Form submitted:", data);
+        sendData(data);
     };
 
     const handleSubmitWrapper = (e: React.FormEvent<HTMLFormElement>) => {
@@ -131,6 +151,7 @@ function PresetMultiple() {
         }, 0);
     };
 
+    // Actual form
     return (
         <Form onSubmit={handleSubmitWrapper} noValidate>
             <Form.Group className="mb-3 mt-3">
@@ -142,7 +163,7 @@ function PresetMultiple() {
                             render={({ field }) => (
                                 <Dropdown
                                     route="/api/get-presets/single"
-                                    returnData={setData}
+                                    returnData={returnOptions}
                                     registerData={{
                                         value: field.value,
                                         onChange: field.onChange,
@@ -195,10 +216,10 @@ function PresetMultiple() {
                             >
                                 <Controller
                                     control={control}
-                                    name={`followingPresets.${index}.dropdown`}
+                                    name={`followingPresets.${index}.preset`}
                                     render={({ field }) => (
                                         <Dropdown
-                                            data={data}
+                                            options={options}
                                             registerData={{
                                                 value: field.value,
                                                 onChange: field.onChange,
@@ -207,11 +228,11 @@ function PresetMultiple() {
                                         />
                                     )}
                                 />
-                                {errors.followingPresets?.[index]?.dropdown && (
+                                {errors.followingPresets?.[index]?.preset && (
                                     <Alert variant="danger">
                                         {
                                             errors.followingPresets[index]
-                                                ?.dropdown?.message
+                                                ?.preset?.message
                                         }
                                     </Alert>
                                 )}
@@ -239,7 +260,7 @@ function PresetMultiple() {
                         type="button"
                         onClick={() => {
                             append(
-                                { time: undefined, dropdown: -1 },
+                                { time: undefined, preset: -1 },
                                 { shouldFocus: false }
                             );
                         }}
