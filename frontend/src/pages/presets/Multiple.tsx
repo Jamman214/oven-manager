@@ -19,7 +19,6 @@ interface Item {
 }
 
 function PresetMultiple() {
-    const [fetched, setFetched] = useState<boolean>(false);
     const [data, setData] = useState<Item[]>([]);
     const [isSubmitting, setSubmitting] = useState<boolean>(false);
 
@@ -41,10 +40,12 @@ function PresetMultiple() {
                     minute: parseInt(match[2], 10),
                 };
             })
+            // When submitting show error if not in the format HH:MM
             .refine((val) => !isSubmitting || val !== undefined, {
                 message: "Invalid time format",
                 path: [],
             })
+            // When submitting show error if not a valid time
             .refine(
                 (val) => {
                     if (isSubmitting) {
@@ -70,7 +71,29 @@ function PresetMultiple() {
     // Define the form schema with validation
     const formSchema = z.object({
         firstPreset: dropdownSchema,
-        followingPresets: z.array(presetSchema),
+        followingPresets: z.array(presetSchema).superRefine((data, ctx) => {
+            for (let i = 1; i < data.length; i++) {
+                const currentTime = data[i]?.time;
+                const previousTime = data[i - 1]?.time;
+                if (currentTime === undefined || previousTime === undefined) {
+                    continue;
+                }
+                if (currentTime.hour > previousTime.hour) {
+                    continue;
+                }
+                if (
+                    currentTime.hour < previousTime.hour ||
+                    currentTime.minute <= previousTime.minute
+                ) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: `This time must be after the one before it`,
+                        path: [i, "time"],
+                    });
+                    continue;
+                }
+            }
+        }),
     });
 
     // Define TypeScript types based on the schema
@@ -119,9 +142,7 @@ function PresetMultiple() {
                             render={({ field }) => (
                                 <Dropdown
                                     route="/api/get-presets/single"
-                                    returnFinished={setFetched}
                                     returnData={setData}
-                                    required={false}
                                     registerData={{
                                         value: field.value,
                                         onChange: field.onChange,
@@ -153,7 +174,6 @@ function PresetMultiple() {
                                     <Form.Control
                                         type="time"
                                         placeholder="HH:MM"
-                                        required={true}
                                         {...register(
                                             `followingPresets.${index}.time`
                                         )}
@@ -179,7 +199,6 @@ function PresetMultiple() {
                                     render={({ field }) => (
                                         <Dropdown
                                             data={data}
-                                            required={true}
                                             registerData={{
                                                 value: field.value,
                                                 onChange: field.onChange,
