@@ -90,7 +90,7 @@ function PresetSingle() {
         "ovenLow",
     ] as SectorLimit[];
 
-    const createSectorLimit = (sector: Sector, limit: Limit): SectorLimit => {
+    const combineSectorLimit = (sector: Sector, limit: Limit): SectorLimit => {
         return `${sector}${limit}`;
     };
 
@@ -143,10 +143,10 @@ function PresetSingle() {
 
     const temperatureInputs = (sector: Sector) => {
         return limits.map((limit: Limit, i) => {
-            const field = createSectorLimit(sector, limit);
+            const field = combineSectorLimit(sector, limit); // Combine sector and limit into a single type
             const fieldError = errors[field];
             return (
-                <Col md={6} key={i}>
+                <Col md={i % 2 === 0 ? { span: 3, offset: 3 } : 3} key={i}>
                     <FloatingLabel
                         controlId={"floatingInput-" + field}
                         label={limit}
@@ -173,7 +173,7 @@ function PresetSingle() {
         return (
             <Form.Group className="mb-3" key={i}>
                 <Row>
-                    <Col>
+                    <Col md={{ span: 6, offset: 3 }}>
                         <Form.Label>
                             {capitalise(sector)} Temperature
                         </Form.Label>
