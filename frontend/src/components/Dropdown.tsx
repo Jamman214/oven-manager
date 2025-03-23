@@ -23,7 +23,7 @@ interface fetchData {
 }
 
 interface fetchedData {
-    data: Item[];
+    options: Item[];
     required?: boolean;
     registerData?: RegisterData;
 }
@@ -74,7 +74,7 @@ function FetchDropdown({
 }
 
 function FetchedDropdown({
-    data,
+    options,
     required = false,
     registerData = {
         value: -1,
@@ -91,7 +91,7 @@ function FetchedDropdown({
             onBlur={registerData.onBlur}
         >
             <option value={-1}>Select a preset</option>
-            {data.map((item) => {
+            {options.map((item) => {
                 return (
                     <option key={item.id} value={item.id}>
                         {item.name}
@@ -103,7 +103,7 @@ function FetchedDropdown({
 }
 
 function Dropdown(params: Params) {
-    if ("data" in params) {
+    if ("options" in params) {
         return FetchedDropdown(params);
     }
     return FetchDropdown(params);
