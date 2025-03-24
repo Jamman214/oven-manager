@@ -11,7 +11,7 @@ interface Props {
     };
 }
 
-type SubmitButtonProps = Props & ButtonHTMLAttributes<HTMLButtonElement>;
+type SubmitButtonProps = Props & React.ComponentProps<typeof Button>;
 
 function SubmitButton({ text = {}, ...buttonProps }: SubmitButtonProps) {
     const {
