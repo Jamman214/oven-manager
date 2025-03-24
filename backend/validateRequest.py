@@ -16,7 +16,7 @@ Predicate: TypeAlias = Callable[[T],bool]
 def tautology(x: Any) -> bool:
     return True
 
-ValidationResult : TypeAlias = tuple[bool, Optional[str]]
+ValidationResult : TypeAlias = tuple[bool, str]
 
 
 class JsonSchema(ABC):
@@ -47,10 +47,9 @@ class ConstraintSchema(JsonSchema):
 
     def validate(self, json_node: Any) -> ValidationResult:
         if self.optional and json_node is None:
-            return True, None
+            return True, ""
 
         valid, error_message = compare_json_types(self.child_node, json_node)
-
         if valid and not self.filter(json_node):
             return False, f"Got value: {json_node} which did not pass filter" 
         return valid, error_message
@@ -66,12 +65,12 @@ class ListSchema(JsonSchema):
             return False, f"Received type: {type(json_node)}, expected type: list"
         return self.validate_list_elements(json_node)
 
-    def validate_list_elements(self, json_list: list):
+    def validate_list_elements(self, json_list: list) -> ValidationResult:
         for json_node in json_list:
             valid, error_message = compare_json_types(self.child_node, json_node)
             if not valid:
                 return False, error_message
-        return True, None
+        return True, ""
 
 
 class DictSchema(JsonSchema):
@@ -88,14 +87,14 @@ class DictSchema(JsonSchema):
         for key, schema_node in self.schema.items():
             json_node = json_dict.get(key)
             return compare_json_types(schema_node, json_node)
-        return True, None
+        return True, ""
 
 
 def compare_json_types(schema_node: JsonNodeConstrained, json_node: Any) -> ValidationResult:    
     if isinstance(schema_node, JsonSchema):
         return schema_node.validate(json_node)
     elif type(json_node) == schema_node:
-        return True, None
+        return True, ""
     
     return False, f"Expected type {schema_node}, got type {type(json_node)}"
 
