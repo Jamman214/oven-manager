@@ -12,19 +12,15 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
 import Dropdown from "../../components/Dropdown";
+import { responsivePropType } from "react-bootstrap/esm/createUtilityClasses";
+import SubmitButton from "../../components/SubmitButton";
 
 interface Item {
     id: number;
     name: string;
 }
 
-function PresetMultiple() {
-    // Options from fetched dropdown
-    const [options, returnOptions] = useState<Item[]>([]);
-
-    // Status of submission
-    const [isSubmitting, setSubmitting] = useState<boolean>(false);
-
+function getSchema(isSubmitting: boolean) {
     // Schema for dropdowns to force a selection
     const dropdownSchema = z.coerce
         .number()
@@ -58,7 +54,6 @@ function PresetMultiple() {
                     if (val === undefined) {
                         return true;
                     }
-                    console.log(val);
                     if (val.hour > 23 || val.hour < 0) {
                         return false;
                     }
@@ -99,8 +94,20 @@ function PresetMultiple() {
             }
         }),
     });
+    return formSchema;
+}
+
+function PresetMultiple() {
+    // Options from fetched dropdown
+    const [options, returnOptions] = useState<Item[]>([]);
+
+    // Status of submission
+    const [isSubmitting, setSubmitting] = useState<boolean>(false);
+    const [submitEvent, setSubmitEvent] =
+        useState<React.FormEvent<HTMLFormElement>>();
 
     // Define TypeScript types based on the schema
+    const formSchema = getSchema(isSubmitting);
     type FormValues = z.infer<typeof formSchema>;
 
     const {
@@ -117,38 +124,59 @@ function PresetMultiple() {
         mode: "onChange",
     });
 
+    // Initialise submit button
+    const submitButtonRef = SubmitButton({
+        text: { initial: "Save Preset" },
+    });
+
     // Setup field array for dynamic times and presets added to form
     const { fields, append, remove } = useFieldArray({
         control,
         name: "followingPresets",
     });
 
-    // Form submission logic
+    // Stores form data
     const [dataToSend, sendData] = useState<FormValues>();
 
+    // When form data is updated, send it to api and update submit button text
     useEffect(() => {
-        if (!dataToSend) return;
-        fetch("/api/set-preset/multiple", {
-            method: "POST",
-            body: JSON.stringify(dataToSend),
-            headers: {
-                "Content-type": "application/json; charset=UTF-8",
-            },
-        });
+        const fetchData = async () => {
+            if (!dataToSend) return;
+            const response = await fetch("/api/set-preset/multiple", {
+                method: "POST",
+                body: JSON.stringify(dataToSend),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                },
+            });
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                submitButtonRef.setToError();
+            } else {
+                submitButtonRef.setToSuccess();
+            }
+        };
+        fetchData();
+        setSubmitting(false);
     }, [dataToSend]);
 
+    // On successful validation set submit button text and send data
     const onSubmit = (data: FormValues) => {
-        console.log("Form submitted:", data);
+        submitButtonRef.setToSubmit();
         sendData(data);
     };
 
+    // Handle the submit event (Seperate to allow isSubmitting to update)
+    useEffect(() => {
+        if (!submitEvent) return;
+        handleSubmit(onSubmit)(submitEvent);
+    }, [submitEvent]);
+
+    // Cancel default behaviour then set submitting and submitEvent
     const handleSubmitWrapper = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setSubmitting(true);
-        setTimeout(() => {
-            handleSubmit(onSubmit)(e);
-            setSubmitting(false);
-        }, 0);
+        setSubmitEvent(e);
     };
 
     // Actual form
@@ -253,7 +281,7 @@ function PresetMultiple() {
                     </Button>
                 </Col>
                 <Col xs={6} md={4} className="d-flex justify-content-center">
-                    <Button type="submit">Save Preset</Button>
+                    {submitButtonRef.button}
                 </Col>
                 <Col xs={3} md={4} className="d-flex justify-content-start">
                     <Button
