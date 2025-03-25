@@ -1,7 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { number, z } from "zod";
 
-import { useForm } from "react-hook-form";
+import {
+    useForm,
+    UseFormWatch,
+    UseFormTrigger,
+    FormProvider,
+    useFormContext,
+    FieldError,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
@@ -11,86 +18,116 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
+import {
+    SubmitAction,
+    SubmitButton,
+    useResponsiveSubmission,
+} from "../../components/SubmitButton";
+
+import ControlSubmittedAndNoChange from "../../components/ControlSubmittedAndNoChange";
+
+/*
+ * Notes:
+ * A sector contains a high and low field
+ * The form contains a core and oven sector
+ *
+ * SANC stands for Submit And No Change (Submit button has been pressed and value has not been changed by user)
+ */
+
+// Constants for accessing inputs
+const sectors = ["core", "oven"] as const;
+type Sector = (typeof sectors)[number];
+const limits = ["high", "low"] as const;
+type Limit = (typeof limits)[number];
+
 function capitalise(word: string) {
     return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
-function PresetSingle() {
-    // Used to prevent error messages for blank inputs when not submitting (I think they're annoying)
-    const [isSubmitting, setSubmitting] = useState<boolean>(false);
-    const [formEvent, setFormEvent] =
-        useState<React.FormEvent<HTMLFormElement>>();
+/* ===========================================================================================
+ *                                  Field State and Schema
+ * =========================================================================================== */
 
-    // Constants for accessing inputs
-    const sectors = ["core", "oven"] as const;
-    const limits = ["high", "low"] as const;
+function initFieldStateSANC() {
+    const [value, setter] = useState<boolean>(false);
+    return { val: value, set: setter };
+}
+type FieldStateSANC = ReturnType<typeof initFieldStateSANC>;
 
-    // Used to individually control submitting status for each input
-    // Without this, when updating paired error messages, it would remove messages produced when submitting
-    // i.e. The Invalid Temperature message
-    const submitMap = () => {
-        const [isSubmittingVal, setSubmittingVal] = useState<boolean>(false);
-        return { val: isSubmittingVal, set: setSubmittingVal };
-    };
-    const isSubmittings = {
-        core: { high: submitMap(), low: submitMap() },
-        oven: { high: submitMap(), low: submitMap() },
-    };
+function getFieldSchema(fieldState: FieldStateSANC) {
+    return z
+        .preprocess(
+            (val) => (Number.isNaN(val) ? undefined : Number(val)),
+            z
+                .number()
+                .min(0, "Temperature cannot be below 0°C.")
+                .max(500, "Temperature cannot be above 500°C.")
+                .optional()
+        )
+        .refine(
+            (val) => {
+                // Return true if not submitted, or already changed
+                // Otherwise, return true if val is defined
+                return !fieldState.val || val !== undefined;
+            },
+            {
+                message: "Temperature is invalid",
+                path: [],
+            }
+        );
+}
 
-    // Schema for each individual input, paired to its submit status to prevent certain errors appearing
-    // before submissions, and to prevent those same messages dissapearing after submission before changes
-    // are made to the input field
-    const numSchema = (sector: "core" | "oven", limit: "high" | "low") =>
-        z
-            .preprocess(
-                (val) => (Number.isNaN(val) ? undefined : Number(val)), // Convert empty string to undefined
-                z
-                    .number()
-                    .min(0, "Temperature cannot be below 0°C.")
-                    .max(500, "Temperature cannot be above 500°C.")
-                    .optional()
-            )
-            .refine(
-                (val) => {
-                    console.log(isSubmittings[sector][limit], val);
-                    return (
-                        !isSubmittings[sector][limit].val || val !== undefined
-                    );
-                },
-                {
-                    message: "Temperature is invalid",
-                    path: [],
-                }
-            );
+type FieldSchema = z.infer<ReturnType<typeof getFieldSchema>>;
 
-    // Schema which enforces high temp being above low temp
-    const sectorSchema = (sector: "core" | "oven") => {
-        return z
-            .object({
-                high: numSchema(sector, "high"),
-                low: numSchema(sector, "low"),
-            })
-            .superRefine((data, ctx) => {
-                if (data.low && data.high && data.low >= data.high) {
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        message: `High Temp must be above Low Temp.`,
-                        path: ["high"],
-                    });
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        message: `Low Temp must be below High Temp.`,
-                        path: ["low"],
-                    });
-                }
-            });
-    };
+/* ===========================================================================================
+ *                                  Sector State and Schema
+ * =========================================================================================== */
 
-    // Schema which enforces core temp being above oven temp
-    const formSchema = z
+function initSectorStateSANC() {
+    return Object.fromEntries(
+        limits.map((limit) => [limit, initFieldStateSANC()])
+    ) as Record<Limit, FieldStateSANC>;
+}
+type SectorStateSANC = ReturnType<typeof initSectorStateSANC>;
+
+function getSectorSchema(sectorState: SectorStateSANC) {
+    return z
         .object({
-            core: sectorSchema("core"),
-            oven: sectorSchema("oven"),
+            high: getFieldSchema(sectorState.high),
+            low: getFieldSchema(sectorState.low),
+        })
+        .superRefine((data, ctx) => {
+            if (data.low && data.high && data.low >= data.high) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `High Temp must be above Low Temp.`,
+                    path: ["high"],
+                });
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `Low Temp must be below High Temp.`,
+                    path: ["low"],
+                });
+            }
+        });
+}
+
+/* ===========================================================================================
+ *                                   Form State and Schema
+ * =========================================================================================== */
+
+function initFormStateSANC() {
+    return Object.fromEntries(
+        sectors.map((sector) => [sector, initSectorStateSANC()])
+    ) as Record<Sector, SectorStateSANC>;
+}
+type FormStateSANC = ReturnType<typeof initFormStateSANC>;
+
+function getFormSchema(formState: FormStateSANC) {
+    return z
+        .object({
+            core: getSectorSchema(formState.core),
+            oven: getSectorSchema(formState.oven),
         })
         .superRefine((data, ctx) => {
             if (
@@ -110,129 +147,201 @@ function PresetSingle() {
                 });
             }
         });
+}
+type FormSchema = z.infer<ReturnType<typeof getFormSchema>>;
 
-    // Define TypeScript types based on the schema
-    type FormValues = z.infer<typeof formSchema>;
+/* ===========================================================================================
+ *                                         Components
+ * =========================================================================================== */
+
+function TemperatureField({
+    sector,
+    limit,
+    fieldState,
+}: {
+    sector: Sector;
+    limit: Limit;
+    fieldState: FieldStateSANC;
+}) {
+    const [status, setStatus] = useState<boolean>(false);
+
+    const path = `${sector}.${limit}` as const;
 
     const {
-        register,
-        handleSubmit,
         formState: { errors },
+        register,
+    } = useFormContext<FormSchema>();
+
+    const fieldError = errors?.[sector]?.[limit];
+
+    return (
+        <FloatingLabel
+            controlId={`floatingInput-${path}`}
+            label={limit}
+            className="mb-3 text-center"
+        >
+            <ControlSubmittedAndNoChange
+                startState={status}
+                returnState={setStatus}
+                type="number"
+                placeholder=" "
+                {...register(path, {
+                    valueAsNumber: true,
+                })}
+                isInvalid={!!fieldError}
+            />
+
+            {fieldError && <Alert variant="danger">{fieldError.message}</Alert>}
+        </FloatingLabel>
+    );
+}
+
+function SectorFieldGroup({
+    sector,
+    sectorState,
+}: {
+    sector: Sector;
+    sectorState: SectorStateSANC;
+}) {
+    const {
         watch,
         trigger,
-    } = useForm<FormValues>({
+        formState: { errors },
+    } = useFormContext<FormSchema>();
+    const highField = `${sector}.high` as const;
+    const lowField = `${sector}.low` as const;
+
+    useEffect(() => {
+        trigger(highField);
+    }, [watch(lowField), trigger]);
+
+    useEffect(() => {
+        trigger(lowField);
+    }, [watch(highField), trigger]);
+
+    return (
+        <Form.Group className="mb-3">
+            <Row>
+                <Col md={{ span: 6, offset: 3 }}>
+                    <Form.Label>{capitalise(sector)} Temperature</Form.Label>
+                </Col>
+            </Row>
+            <Row>
+                {limits.map((limit, i) => (
+                    <Col md={i % 2 === 0 ? { span: 3, offset: 3 } : 3} key={i}>
+                        <TemperatureField
+                            sector={sector}
+                            limit={limit}
+                            fieldState={sectorState[limit]}
+                        />
+                    </Col>
+                ))}
+            </Row>
+        </Form.Group>
+    );
+}
+
+function FormFields({ formState }: { formState: FormStateSANC }) {
+    const { watch, trigger } = useFormContext<FormSchema>();
+    const coreLowField = "core.low" as const;
+    const ovenHighField = "oven.high" as const;
+
+    useEffect(() => {
+        trigger(coreLowField);
+    }, [watch(ovenHighField), trigger]);
+
+    useEffect(() => {
+        trigger(ovenHighField);
+    }, [watch(coreLowField), trigger]);
+
+    return (
+        <>
+            {sectors.map((sector, i) => (
+                <SectorFieldGroup
+                    key={i}
+                    sector={sector}
+                    sectorState={formState[sector]}
+                />
+            ))}
+        </>
+    );
+}
+
+function PresetSingle() {
+    const fieldStates = initFormStateSANC();
+    const setAllSANC = () => {
+        fieldStates["core"]["high"].set(true);
+        fieldStates["core"]["low"].set(true);
+        fieldStates["oven"]["high"].set(true);
+        fieldStates["oven"]["low"].set(true);
+    };
+
+    const formSchema = getFormSchema(fieldStates);
+
+    const { ...methods } = useForm<FormSchema>({
         resolver: zodResolver(formSchema),
         mode: "onChange",
     });
 
-    // Update error messages in each sector when other limit updates
-    for (const sector of sectors) {
-        for (let i = 0; i < 2; i++) {
-            const watcher = watch(`${sector}.${limits[i]}`);
+    const { handleSubmit } = methods;
 
-            useEffect(() => {
-                trigger(`${sector}.${limits[(i + 1) % 2]}`);
-            }, [watcher, trigger]);
-        }
-    }
+    const { dispatch } = useResponsiveSubmission();
 
-    // Update error messages between sectors when they overlap
+    // Stores form data
+    const [dataToSend, sendData] = useState<FormSchema>();
+    const [submitEvent, setSubmitEvent] =
+        useState<React.FormEvent<HTMLFormElement>>();
+
+    // When form data is updated, send it to api and update submit button text
     useEffect(() => {
-        trigger("oven.high");
-    }, [watch("core.low"), trigger]);
+        const fetchData = async () => {
+            if (!dataToSend) return;
+            const response = await fetch("/api/set-preset/single", {
+                method: "POST",
+                body: JSON.stringify(dataToSend),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                },
+            });
+            if (!response.ok) {
+                dispatch(SubmitAction.FAIL);
+            } else {
+                dispatch(SubmitAction.SUCCEED);
+            }
+        };
+        fetchData();
+    }, [dataToSend]);
 
+    // On successful validation set submit button text and send data
+    const onSubmit = (data: FormSchema) => {
+        dispatch(SubmitAction.SUBMIT);
+        sendData(data);
+    };
+
+    // Handle the submit event (Seperate to allow isSubmitting to update)
     useEffect(() => {
-        trigger("core.low");
-    }, [watch("oven.high"), trigger]);
+        if (!submitEvent) return;
+        handleSubmit(onSubmit)(submitEvent);
+    }, [submitEvent]);
 
-    // Sets isSubmitting to true globally and for all elements
+    // Cancel default behaviour then set submitting and submitEvent
     const handleSubmitWrapper = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setFormEvent(e);
-        isSubmittings["core"]["high"].set(true);
-        isSubmittings["core"]["low"].set(true);
-        isSubmittings["oven"]["high"].set(true);
-        isSubmittings["oven"]["low"].set(true);
-        setSubmitting(true);
+        setAllSANC();
+        setSubmitEvent(e);
     };
-
-    // Function to run on success
-    const onSubmit = (data: FormValues) => {
-        console.log("Submitted data:", data);
-    };
-
-    // Attempts to submit form
-    useEffect(() => {
-        if (!isSubmitting) {
-            return;
-        }
-        handleSubmit(onSubmit)(formEvent);
-        setSubmitting(false);
-    }, [isSubmitting]);
-
-    // Web page
-    const limitInputs = (sector: "core" | "oven", i: number) => {
-        return limits.map((limit, j) => {
-            const field = `${sector}.${limit}`; // Combine sector and limit into a single type
-            const fieldError = errors?.[sector]?.[limit]; // Get possibly undefined key
-            return (
-                <Col md={j % 2 === 0 ? { span: 3, offset: 3 } : 3} key={j}>
-                    <FloatingLabel
-                        controlId={"floatingInput-" + field}
-                        label={limit}
-                        className="mb-3 text-center"
-                    >
-                        <Form.Control
-                            type="number"
-                            placeholder=" "
-                            {...register(`${sector}.${limit}`, {
-                                valueAsNumber: true,
-                            })}
-                            isInvalid={!!fieldError}
-                            onChange={(e) => {
-                                // Call the existing registered onChange handler
-                                register(`${sector}.${limit}`).onChange(e);
-
-                                // Your additional action
-                                isSubmittings[sector][limit].set(false);
-                            }}
-                        />
-
-                        {fieldError && (
-                            <Alert variant="danger">{fieldError.message}</Alert>
-                        )}
-                    </FloatingLabel>
-                </Col>
-            );
-        });
-    };
-
-    const sectorInputs = (() => {
-        return sectors.map((sector, i) => {
-            return (
-                <Form.Group className="mb-3" key={i}>
-                    <Row>
-                        <Col md={{ span: 6, offset: 3 }}>
-                            <Form.Label>
-                                {capitalise(sector)} Temperature
-                            </Form.Label>
-                        </Col>
-                    </Row>
-                    <Row>{limitInputs(sector, i)}</Row>
-                </Form.Group>
-            );
-        });
-    })();
 
     return (
-        <Form onSubmit={handleSubmitWrapper} noValidate>
-            {sectorInputs}
-            <Row className="d-flex justify-content-center">
-                <Col xs={6} className="text-center">
-                    <Button type="submit">Save Preset</Button>
-                </Col>
-            </Row>
-        </Form>
+        <FormProvider {...methods}>
+            <Form onSubmit={handleSubmitWrapper} noValidate>
+                <FormFields formState={fieldStates} />
+                <Row className="d-flex justify-content-center">
+                    <Col xs={6} className="text-center">
+                        <SubmitButton text={{ initial: "Save Preset" }} />
+                    </Col>
+                </Row>
+            </Form>
+        </FormProvider>
     );
 }
 

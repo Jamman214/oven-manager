@@ -1,10 +1,13 @@
 import Container from "react-bootstrap/Container";
 import { Outlet } from "react-router-dom";
+import { ResponsiveSubmissionProvider } from "../components/SubmitButton";
 
 function Presets() {
     return (
         <Container fluid>
-            <Outlet />
+            <ResponsiveSubmissionProvider>
+                <Outlet />
+            </ResponsiveSubmissionProvider>
         </Container>
     );
 }
