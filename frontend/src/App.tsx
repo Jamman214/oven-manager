@@ -1,35 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import NavBar from "./components/NavBar";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/Home";
+import ConfigPage from "./pages/Config";
+import HistoryPage from "./pages/History";
+import PresetCreate from "./pages/presets/PresetCreate";
+import PresetSchedule from "./pages/presets/PresetSchedule";
+import { useEffect } from "react";
+
+import "./scss/App.scss";
 
 function App() {
-  const [count, setCount] = useState(0)
+    useEffect(() => {
+        document.documentElement.setAttribute("data-bs-theme", "dark");
+    }, []);
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    return (
+        <BrowserRouter>
+            <NavBar
+                brand={{ text: "Oven Manager", link: "/" }}
+                items={[
+                    { text: "Config", link: "/config" },
+                    {
+                        text: "Presets",
+                        subitems: [
+                            { text: "Create", link: "/presets/create" },
+                            { text: "Schedule", link: "/presets/schedule" },
+                        ],
+                    },
+                    { text: "History", link: "/history" },
+                ]}
+            />
+            <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/config" element={<ConfigPage />} />
+                <Route path="/presets/create" element={<PresetCreate />} />
+                <Route path="/presets/schedule" element={<PresetSchedule />} />
+                <Route path="/history" element={<HistoryPage />} />
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
-export default App
+export default App;
