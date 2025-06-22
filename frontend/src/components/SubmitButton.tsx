@@ -1,4 +1,6 @@
-import React, {
+
+import {
+    type ComponentProps,
     createContext,
     useState,
     useContext,
@@ -10,6 +12,7 @@ import Button from "react-bootstrap/Button";
 type SubmitAction = "RESET" | "SUBMIT" | "SUCCEED" | "FAIL";
 
 interface Props {
+    action?: SubmitAction
     text?: {
         resetText?: string;
         submitText?: string;
@@ -19,7 +22,7 @@ interface Props {
     };
 }
 
-type SubmitButtonProps = Props & React.ComponentProps<typeof Button>;
+type SubmitButtonProps = Props & ComponentProps<"button">;
 
 function SubmitButton({ action = "RESET", text = {}, ...buttonProps }: SubmitButtonProps) {
     const [outerAction, setOuterAction] = useState<SubmitAction>("RESET");
@@ -91,9 +94,9 @@ function SubmitButton({ action = "RESET", text = {}, ...buttonProps }: SubmitBut
 
 
     return (
-        <Button type="submit" disabled={disabled} {...buttonProps}>
+        <button type="submit" className="testButton" disabled={disabled} {...buttonProps}>
             {buttonText}
-        </Button>
+        </button>
     );
 }
 

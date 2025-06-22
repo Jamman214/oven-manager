@@ -1,40 +1,47 @@
-@import "bootstrap/scss/functions";
-@import "bootstrap/scss/variables";
-@import "bootstrap/scss/mixins";
+// @import "bootstrap/scss/functions";
+// @import "bootstrap/scss/variables";
+// @import "bootstrap/scss/mixins";
 // @import "bootstrap/scss/bootstrap";
+@import "./colours";
 
-@import "./NavBar.scss";
+$border-width: 1px;
+$button-colour: $orange;
 
-.form-control:focus,
-.form-select:focus {
-    border: 1px solid $orange-400;
-    border-radius: var(--bs-border-radius);
-    outline: None;
-    box-shadow: 0px 0px 10px 5px $orange-800;
+body {
+    background: $gray-900;
 }
 
-.btn[type="submit"],
-.btn[type="button"] {
-    background: $orange-600;
-    border: 1px solid $orange-500;
 
-    &:focus,
-    &:hover {
-        border: 1px solid $orange-400;
-        border-radius: var(--bs-border-radius);
-        outline: None;
-        box-shadow: 0px 0px 10px 5px $orange-800;
-    }
-    &:active {
-        background: $orange-500;
-        border: 1px solid $orange-300;
-        border-radius: var(--bs-border-radius);
-        outline: None;
-        box-shadow: 0px 0px 10px 5px $orange-700;
-    }
-    margin-bottom: 60px;
-}
 
-.alert {
-    margin-bottom: 0px;
-}
+// input:focus,
+// select:focus {
+//     border: $border-width solid $orange-400;
+//     border-radius: var(--bs-border-radius);
+//     outline: None;
+//     box-shadow: 0px 0px 10px 5px $orange-800;
+// }
+
+// button {
+//     background: $orange-600;
+//     border: $border-width solid $orange-500;
+
+//     &:focus,
+//     &:hover {
+//         border: $border-width solid $orange-400;
+//         border-radius: var(--bs-border-radius);
+//         outline: None;
+//         box-shadow: 0px 0px 10px 5px $orange-800;
+//     }
+//     &:active {
+//         background: $orange-500;
+//         border: 1px solid $orange-300;
+//         border-radius: var(--bs-border-radius);
+//         outline: None;
+//         box-shadow: 0px 0px 10px 5px $orange-700;
+//     }
+//     margin-bottom: 60px;
+// } 
+
+// .alert {
+//     margin-bottom: 0px;
+// }

@@ -1,9 +1,7 @@
-import Container from "react-bootstrap/Container";
-import Nav from "react-bootstrap/Nav";
-import Navbar from "react-bootstrap/Navbar";
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
-import NavDropdown from "react-bootstrap/NavDropdown";
+
+import "../scss/NavBar.scss"
 
 interface TextRefPair {
     text: string;
@@ -17,72 +15,80 @@ interface TextRefPairDropdown {
 
 type NavItem = TextRefPair | TextRefPairDropdown;
 
-interface Props {
+
+interface MenuIconProps {
+    expanded: boolean;
+    beenExpanded: boolean;
+}
+
+function MenuIcon({expanded, beenExpanded}: MenuIconProps) {
+    return <div className={`menuicon ${expanded ? "expanded" : (beenExpanded ? "contracted" : "")}`}>
+        <div className="topbar"></div>
+        <div className="midbar"></div>
+        <div className="botbar"></div>
+    </div>
+}
+
+interface NavBarProps {
     brand: TextRefPair;
     items: NavItem[];
 }
 
-function NavBar({ brand, items }: Props) {
+function NavBar({ brand, items }: NavBarProps) {
     const [expanded, setExpanded] = useState<boolean>(false);
+    const [beenExpanded, setBeenExpanded] = useState<boolean>(false);
 
     return (
-        <Navbar expand="sm" expanded={expanded}>
-            <Container fluid>
-                <Navbar.Brand
-                    as={NavLink}
-                    to={brand.link}
-                    onClick={() => setExpanded(false)}
-                >
-                    {brand.text}
-                </Navbar.Brand>
-
-                <Navbar.Toggle
-                    aria-controls="navbar"
-                    onClick={() => setExpanded(!expanded)}
-                />
-
-                <Navbar.Collapse id="navbar">
-                    <Nav>
-                        {items.map((item: NavItem, i) => {
-                            if ("subitems" in item) {
-                                return (
-                                    <NavDropdown title={item.text} key={i}>
-                                        {item.subitems.map(
-                                            (subitem: TextRefPair, j) => {
-                                                return (
-                                                    <NavDropdown.Item
-                                                        as={NavLink}
-                                                        to={subitem.link}
-                                                        key={j}
-                                                        onClick={() =>
-                                                            setExpanded(
-                                                                false
-                                                            )
-                                                        }
-                                                    >
-                                                        {subitem.text}
-                                                    </NavDropdown.Item>
-                                                );
-                                            }
-                                        )}
-                                    </NavDropdown>
-                                );
-                            }
+        <div className="navbar">
+            <NavLink className="navbar-brand"
+                to={brand.link}
+                onClick={() => setExpanded(false)}
+            >
+                {brand.text} - {String(expanded)}
+            </NavLink>
+                <div className="navbar-collapse">
+                    {items.map((item: NavItem, i) => {
+                        if ("subitems" in item) {
                             return (
-                                <Nav.Link
-                                    as={NavLink}
-                                    to={item.link}
-                                    key={i}
-                                    onClick={() => setExpanded(false)}
-                                >
-                                    {item.text}
-                                </Nav.Link>
+                                <div className="navbar-dropdown" key={i}>
+                                    {item.subitems.map(
+                                        (subitem: TextRefPair, j) => {
+                                            return (
+                                                <NavLink
+                                                    to={subitem.link}
+                                                    key={j}
+                                                    onClick={() =>
+                                                        setExpanded(
+                                                            false
+                                                        )
+                                                    }
+                                                >
+                                                    {subitem.text}
+                                                </NavLink>
+                                            );
+                                        }
+                                    )}
+                                </div>
                             );
-                        })}
-                    </Nav>
-                </Navbar.Collapse>
-            </Container>
-        </Navbar>
+                        }
+                        return (
+                            <NavLink
+                                to={item.link}
+                                key={i}
+                                onClick={() => setExpanded(false)}
+                            >
+                                {item.text}
+                            </NavLink>
+                        );
+                    })}
+                </div>
+
+                <button className="navbar-toggle"
+                    onClick={() => {setExpanded((prev) => !prev); setBeenExpanded(true)}}
+                >
+                    <MenuIcon expanded={expanded} beenExpanded={beenExpanded}/>
+                </button>
+        </div>
     );
 }
 

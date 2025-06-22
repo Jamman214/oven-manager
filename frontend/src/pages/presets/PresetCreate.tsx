@@ -5,11 +5,6 @@ import {
     useFormContext,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Form from "react-bootstrap/Form";
-import FloatingLabel from "react-bootstrap/FloatingLabel";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Container from "react-bootstrap/Container"
 
 import ErrorAlert from "../../components/ErrorAlert.tsx";
 import {type SubmitAction, SubmitButton} from "../../components/SubmitButton.tsx";
@@ -59,12 +54,9 @@ function TemperatureField({
     // const onBlur = () => {}
     
     return (
-        <FloatingLabel
-            controlId={`floatingInput-${path}`}
-            label={capitalise(limit)}
-            className="mb-3 text-center"
-        >
-            <Form.Control
+        <>
+            <label>{capitalise(limit)}</label>
+            <input
                 type="number"
                 {...register(
                     path, 
@@ -73,11 +65,10 @@ function TemperatureField({
                         onBlur
                     }
                 )}
-                isInvalid={isInvalid}
                 placeholder=" "
             />
             <ErrorAlert error={errors.form?.[sector]?.[limit]?.message}/>
-        </FloatingLabel>
+        </>
     );
 }
 
@@ -89,36 +80,26 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
     const fieldError = errors.form?.[sector];
 
     return (
-        <Form.Group className="mb-3">
-            <Row>
-                <Col md={{ span: 6, offset: 3 }}>
-                    <Form.Label>{capitalise(sector)} Temperature</Form.Label>
-                </Col>
-            </Row>
-            <Row>
-                {limits.map((limit, i) => (
-                    <Col md={i % 2 === 0 ? { span: 3, offset: 3 } : 3} key={i}>
-                        <TemperatureField
-                            sector={sector}
-                            limit={limit}
-                        />
-                    </Col>
-                ))}
-            </Row>
+        <>
+    
+            <label>{capitalise(sector)} Temperature</label>
+            {limits.map((limit, i) => (
+                
+                    <TemperatureField
+                        sector={sector}
+                        limit={limit}
+                    />
+            ))}
             <ErrorAlert 
                 error={fieldError?.message}
-                col={{md:{ span: 6, offset: 3 }}}
-                row
             />
             {
                 sector === 'oven' &&
                 <ErrorAlert 
                     error={errors?.form?.message}
-                    col={{md:{ span: 6, offset: 3 }}}
-                    row
                 />
             }
-        </Form.Group>
+        </>
     );
 }
 
@@ -202,18 +183,12 @@ function PresetCreate() {
     }
 
     return (
-        <Container>
-            <FormProvider {...methods}>
-                <Form onSubmit={handleSubmit(submitHandler)} noValidate>
-                    <FormFields/>
-                    <Row className="d-flex justify-content-center">
-                        <Col xs={6} className="text-center">
-                            <SubmitButton action={submitAction} text={{ resetText: "Save Preset" }} />
-                        </Col>
-                    </Row>
-                </Form>
-            </FormProvider>
-        </Container>
+        <FormProvider {...methods}>
+            <form onSubmit={handleSubmit(submitHandler)} noValidate>
+                <FormFields/>
+                <SubmitButton action={submitAction} text={{ resetText: "Save Preset" }} />
+            </form>
+        </FormProvider>
     );
 }
 

@@ -8,7 +8,7 @@ type Item = {
 }
 
 interface Params 
-    extends ComponentProps<typeof Form.Select>
+    extends ComponentProps<"select">
     { 
         options: Item[];
         initial?: string;
@@ -23,7 +23,7 @@ function Dropdown({
     ...props
 }: Params) {
     return (
-        <Form.Select {...props}>
+        <select {...props}>
             {
                 initial &&
                 <option value="" disabled={disableInitial}>
@@ -38,7 +38,7 @@ function Dropdown({
                     </option>
                 ))
             }
-        </Form.Select>
+        </select>
     );
 }
 

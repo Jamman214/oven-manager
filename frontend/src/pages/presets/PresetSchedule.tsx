@@ -8,13 +8,6 @@ import {
     useFormContext,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
-import Alert from "react-bootstrap/Alert";
-import FloatingLabel from "react-bootstrap/FloatingLabel";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
 
 import {Dropdown, type Item} from "../../components/Dropdown.tsx";
 import ErrorAlert from "../../components/ErrorAlert.tsx";
@@ -38,29 +31,21 @@ function Time ({index}: TimeProps) {
     const onBlur = async () => {await trigger()};
 
     return (
-        <Col
-            className="mb-3"
-            xs={12}
-            md={{ span: 6, offset: 3 }}
-        >
-            <FloatingLabel
-                controlId={`floatingInput-time-${index}`}
-                label="End Time"
-            >
-                <Form.Control
-                    type="time"
-                    placeholder="HH:MM"
-                    {...register(
-                        `time.${index}.value`,
-                        {onBlur}
-                    )}
-                    isInvalid={Boolean(errors.time?.[index]?.value)}
-                />
-                <ErrorAlert 
-                    error={errors.time?.[index]?.value?.message}
-                />
-            </FloatingLabel>
-        </Col>
+        <>
+            <label>End Time</label>
+                
+            <input
+                type="time"
+                placeholder="HH:MM"
+                {...register(
+                    `time.${index}.value`,
+                    {onBlur}
+                )}
+            />
+            <ErrorAlert 
+                error={errors.time?.[index]?.value?.message}
+            />
+        </>
     )
 }
 
@@ -76,20 +61,13 @@ function Preset ({index, options}: PresetProps) {
     } = useFormContext<FormInput, unknown, FormOutput>();
 
     return (
-        <Col
-            className="mb-3"
-            xs={12}
-            md={{ span: 6, offset: 3 }}
-        >
-            <Dropdown
-                options={options}
-                initial="Select a Preset"
-                {...register(
-                    `preset.${index}.value`,
-                )}
-                isInvalid={Boolean(errors.preset?.[index]?.message)}
-            />
-        </Col>
+        <Dropdown
+            options={options}
+            initial="Select a Preset"
+            {...register(
+                `preset.${index}.value`,
+            )}
+        />
     )
 }
 
@@ -115,13 +93,13 @@ function FormFields({timeFields, presetFields} : FormFieldsProps) {
     return (
         <>
             {presetFields.map((field, index) => 
-                <Row key={field.id}>
+                <Fragment key={field.id}>
                     {
                         index > 0 && 
                         <Time index={index-1}/>
                     }
                     <Preset index={index} options={options}/>
-                </Row>
+                </Fragment>
             )}
         </>
     );
@@ -213,36 +191,25 @@ function PresetSchedule() {
 
     // Actual form
     return (
-        <Container>
-            <FormProvider {...methods}>
-                <Form onSubmit={handleSubmitWrapper} noValidate>
-                    <Form.Group className="mb-3 mt-3">
-                        <FormFields {...{timeFields, presetFields}}/>
-                    </Form.Group>
-                    <Row>
-                        <Col xs={3} md={4} className="d-flex justify-content-end">
-                            <Button
-                                type="button"
-                                onClick={remove}
-                            >
-                                -
-                            </Button>
-                        </Col>
-                        <Col xs={6} md={4} className="d-flex justify-content-center">
-                            <SubmitButton action={submitAction} text={{ resetText: "Save Schedule" }} />
-                        </Col>
-                        <Col xs={3} md={4} className="d-flex justify-content-start">
-                            <Button
-                                type="button"
-                                onClick={append}
-                            >
-                                +
-                            </Button>
-                        </Col>
-                    </Row>
-                </Form>
-            </FormProvider>
-        </Container>
+        <FormProvider {...methods}>
+            <form onSubmit={handleSubmitWrapper} noValidate>
+                    <FormFields {...{timeFields, presetFields}}/>
+                        <button
+                            type="button"
+                            onClick={remove}
+                        >
+                            -
+                        </button>
+                        <SubmitButton action={submitAction} text={{ resetText: "Save Schedule" }} />
+                        <button
+                            type="button"
+                            onClick={append}
+                        >
+                            +
+                        </button>
+
+            </form>
+        </FormProvider>
     );
 }
 
