@@ -17,9 +17,8 @@ $slice-transformY: (($slice-height + $slice-gap) / $slice-height) * 100%;
         width: 100%;
         height: $slice-height;
         background: $slice-colour;
-        transition: 0.4s;
-        animation-duration: .5s;
-        animation-timing-function: ease-out;
+        animation-duration: .2s;
+        animation-timing-function: ease-in;
         animation-fill-mode: forwards;
 
     }
@@ -41,7 +40,7 @@ $slice-transformY: (($slice-height + $slice-gap) / $slice-height) * 100%;
 
 @keyframes top-bar-open {
     0% {
-        transform: translate(0, 0);
+        transform: translateY(0%) rotate(0deg);
     }
     50% {
         transform: translateY($slice-transformY) rotate(0deg);
@@ -58,11 +57,14 @@ $slice-transformY: (($slice-height + $slice-gap) / $slice-height) * 100%;
         transform: translateY($slice-transformY) rotate(0deg);
     }
     100% {
-        transform: translate(0, 0);
+        transform: translateY(0%) rotate(0deg);
     }
 }
 
 @keyframes middle-bar-open {
+    0% {
+        opacity: 1;
+    }
     49% {
         opacity: 1;
     }
@@ -83,11 +85,14 @@ $slice-transformY: (($slice-height + $slice-gap) / $slice-height) * 100%;
     51% {
         opacity: 1;
     }
+    100% {
+        opacity: 1;
+    }
 }
 
 @keyframes bottom-bar-open {
     0% {
-        transform: translate(0, 0);
+        transform: translateY(0%) rotate(0deg);
     }
     50% {
         transform: translateY(-$slice-transformY) rotate(0deg);
@@ -104,7 +109,7 @@ $slice-transformY: (($slice-height + $slice-gap) / $slice-height) * 100%;
         transform: translateY(-$slice-transformY) rotate(0deg);
     }
     100% {
-        transform: translate(0, 0);
+        transform: translateY(0%) rotate(0deg);
     }
 }
 
