@@ -1,7 +1,8 @@
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
+import { MenuBurger } from "./MenuBurger.tsx";
 
-import "../scss/NavBar.scss"
+import "../scss/components/NavBar.scss"
 
 interface TextRefPair {
     text: string;
@@ -14,20 +15,6 @@ interface TextRefPairDropdown {
 }
 
 type NavItem = TextRefPair | TextRefPairDropdown;
-
-
-interface MenuIconProps {
-    expanded: boolean;
-    beenExpanded: boolean;
-}
-
-function MenuIcon({expanded, beenExpanded}: MenuIconProps) {
-    return <div className={`menuicon ${expanded ? "expanded" : (beenExpanded ? "contracted" : "")}`}>
-        <div className="topbar"></div>
-        <div className="midbar"></div>
-        <div className="botbar"></div>
-    </div>
-}
 
 interface NavBarProps {
     brand: TextRefPair;
@@ -46,48 +33,48 @@ function NavBar({ brand, items }: NavBarProps) {
             >
                 {brand.text}
             </NavLink>
-                <div className="navbar-collapse">
-                    {items.map((item: NavItem, i) => {
-                        if ("subitems" in item) {
-                            return (
-                                <div className="navbar-dropdown" key={i}>
-                                    {item.subitems.map(
-                                        (subitem: TextRefPair, j) => {
-                                            return (
-                                                <NavLink
-                                                    to={subitem.link}
-                                                    key={j}
-                                                    onClick={() =>
-                                                        setExpanded(
-                                                            false
-                                                        )
-                                                    }
-                                                >
-                                                    {subitem.text}
-                                                </NavLink>
-                                            );
-                                        }
-                                    )}
-                                </div>
-                            );
-                        }
+            <div className="navbar-collapse">
+                {items.map((item: NavItem, i) => {
+                    if ("subitems" in item) {
                         return (
-                            <NavLink
-                                to={item.link}
-                                key={i}
-                                onClick={() => setExpanded(false)}
-                            >
-                                {item.text}
-                            </NavLink>
+                            <div className="navbar-dropdown" key={i}>
+                                {item.subitems.map(
+                                    (subitem: TextRefPair, j) => {
+                                        return (
+                                            <NavLink
+                                                to={subitem.link}
+                                                key={j}
+                                                onClick={() =>
+                                                    setExpanded(
+                                                        false
+                                                    )
+                                                }
+                                            >
+                                                {subitem.text}
+                                            </NavLink>
+                                        );
+                                    }
+                                )}
+                            </div>
                         );
-                    })}
-                </div>
+                    }
+                    return (
+                        <NavLink
+                            to={item.link}
+                            key={i}
+                            onClick={() => setExpanded(false)}
+                        >
+                            {item.text}
+                        </NavLink>
+                    );
+                })}
+            </div>
 
-                <button className="navbar-toggle"
-                    onClick={() => {setExpanded((prev) => !prev); setBeenExpanded(true)}}
-                >
-                    <MenuIcon expanded={expanded} beenExpanded={beenExpanded}/>
-                </button>
+            <button className="navbar-toggle"
+                onClick={() => {setExpanded((prev) => !prev); setBeenExpanded(true)}}
+            >
+                <MenuBurger isOpen={expanded} wasOpen={beenExpanded}/>
+            </button>
         </div>
     );
 }

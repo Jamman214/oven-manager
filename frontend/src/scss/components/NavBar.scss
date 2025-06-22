@@ -1,0 +1,72 @@
+@import "../colours.scss";
+@import "../breakpoints.scss";
+
+
+$navbar-background: $gray-900;
+$navbar-border: 2px solid $gray-800;
+
+.navbar {
+    background: $navbar-background;
+    border-bottom: $navbar-border;
+
+    padding: .5rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    @include sm_max {
+        justify-content: space-between;
+    }
+}
+
+.navbar-brand {
+    flex-grow: 0;
+    
+    font-size: 2rem;
+    padding: .5rem;
+
+    color: $white;
+    text-decoration: none;
+
+    
+}
+
+.navbar-collapse {
+    flex-grow: 1;
+
+    a {
+        color: $gray-500;
+        text-decoration: none;
+
+        &:hover {
+            color: $gray-400;
+            
+        }
+    }
+
+    @include sm_max {
+        display: none;
+    }
+}
+
+.navbar-dropdown {
+    display: inline-block;
+}
+
+.navbar-toggle {
+    flex-grow: 0;
+
+    height: 3rem;
+    aspect-ratio: 1/1;
+
+    padding: .5rem;
+
+    background: $gray-900;
+    border:1px solid $gray-500;
+    border-radius: .5rem;
+    margin: 0rem .5rem 0rem .5rem;
+    
+    @include sm {
+        display: none;
+    }
+}

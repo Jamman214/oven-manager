@@ -1,0 +1,143 @@
+@import "../colours.scss";
+
+$slice-colour: $gray-500;
+$slice-height: 12%;
+$slice-gap: 17%;
+
+$slice-padding: ((100% - (3 * $slice-height) - (2 * $slice-gap)) / 2);
+$slice-transformY: (($slice-height + $slice-gap) / $slice-height) * 100%;
+
+.menu-burger {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+
+    .topbar, .midbar, .botbar {
+        position: relative;
+        width: 100%;
+        height: $slice-height;
+        background: $slice-colour;
+        transition: 0.4s;
+        animation-duration: .5s;
+        animation-timing-function: ease-out;
+        animation-fill-mode: forwards;
+
+    }
+
+    .topbar {
+        margin-top: $slice-padding;
+    }
+
+    .midbar {
+        margin-top: $slice-gap;
+        margin-bottom: $slice-gap;
+    }
+
+    .botbar {
+        margin-bottom: $slice-padding;
+    }
+}
+
+
+@keyframes top-bar-open {
+    0% {
+        transform: translate(0, 0);
+    }
+    50% {
+        transform: translateY($slice-transformY) rotate(0deg);
+    }
+    100% {
+        transform: translateY($slice-transformY) rotate(45deg);
+    }
+}
+@keyframes top-bar-close {
+    0% {
+        transform: translateY($slice-transformY) rotate(45deg);
+    }
+    50% {
+        transform: translateY($slice-transformY) rotate(0deg);
+    }
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes middle-bar-open {
+    49% {
+        opacity: 1;
+    }
+    50% {
+        opacity:0;
+    }
+    100% {
+        opacity:0;
+    }
+}
+@keyframes middle-bar-close {
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 0;
+    }
+    51% {
+        opacity: 1;
+    }
+}
+
+@keyframes bottom-bar-open {
+    0% {
+        transform: translate(0, 0);
+    }
+    50% {
+        transform: translateY(-$slice-transformY) rotate(0deg);
+    }
+    100% {
+        transform: translateY(-$slice-transformY) rotate(-45deg);
+    }
+}
+@keyframes bottom-bar-close {
+    0% {
+        transform: translateY(-$slice-transformY) rotate(-45deg);
+    }
+    50% {
+        transform: translateY(-$slice-transformY) rotate(0deg);
+    }
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+.menu-burger.open {
+    .topbar {
+        animation-name: top-bar-open;
+        animation-direction: forwards ;
+    }
+
+    .midbar {
+        animation-name: middle-bar-open;
+        animation-direction: forwards;
+    }
+
+    .botbar {
+        animation-name: bottom-bar-open;
+        animation-direction: forwards;
+    }
+}
+
+.menu-burger.was-open {
+    .topbar {
+        animation-name: top-bar-close;
+        animation-direction: forwards ;
+    }
+
+    .midbar {
+        animation-name: middle-bar-close;
+        animation-direction: forwards;
+    }
+
+    .botbar {
+        animation-name: bottom-bar-close;
+        animation-direction: reveforwardsrse;
+    }
+}
