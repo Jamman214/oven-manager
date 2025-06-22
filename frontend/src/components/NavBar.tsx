@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MenuBurger } from "./MenuBurger.tsx";
+import { breakpoint_sm } from "../utility/breakpoints.tsx"
 
 import "../scss/components/NavBar.scss"
 
@@ -24,6 +25,20 @@ interface NavBarProps {
 function NavBar({ brand, items }: NavBarProps) {
     const [expanded, setExpanded] = useState<boolean>(false);
     const [beenExpanded, setBeenExpanded] = useState<boolean>(false);
+
+    // Closes dropdown when screen gets bigger
+    // Also prevents animation from playing when screen gets smaller again
+    useEffect(() => {
+        function handleResize() {
+            console.log("handled")
+            if (window.innerWidth >= breakpoint_sm) {
+                // If the screen isn't small, unexpand it
+                setExpanded(false);
+                setBeenExpanded(false);
+            }
+        }
+        window.addEventListener('resize', handleResize);
+    }, []);
 
     return (
         <div className="navbar">
