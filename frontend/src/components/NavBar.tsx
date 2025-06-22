@@ -44,7 +44,7 @@ function NavBar({ brand, items }: NavBarProps) {
                 to={brand.link}
                 onClick={() => setExpanded(false)}
             >
-                {brand.text} - {String(expanded)}
+                {brand.text}
             </NavLink>
                 <div className="navbar-collapse">
                     {items.map((item: NavItem, i) => {
