@@ -1,6 +1,7 @@
 @import "../colours.scss";
 
-$burger-height: 1.25rem;
+// Had to use cqh since percent causes animation bugs in safari
+$burger-height: 100cqh;
 $animation-duration: .2s;
 
 $slice-colour: $gray-500;

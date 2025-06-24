@@ -66,12 +66,15 @@ $navbar-colour-active: $white;
     height: 2.5rem;
     aspect-ratio: 1/1;
 
-    padding: .5rem;
+    padding: .375rem;
 
     background: $navbar-background;
-    border: 2px solid $navbar-border;
+    border: .25rem solid $navbar-border;
     border-radius: .5rem;
-    margin: 0rem .5rem 0rem .5rem;
+    margin-right: .5rem;
+
+    container-type: size;
+    container-name: menu-burger;
     
     @include sm {
         display: none;
