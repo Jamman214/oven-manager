@@ -1,13 +1,14 @@
 @import "../colours.scss";
 
-$slice-colour: $gray-500;
-$slice-height: 12%;
-$slice-gap: 17%;
-
+$burger-height: 1.25rem;
 $animation-duration: .2s;
 
-$slice-padding: ((100% - (3 * $slice-height) - (2 * $slice-gap)) / 2);
-$slice-transformY: (($slice-height + $slice-gap) / $slice-height) * 100%;
+$slice-colour: $gray-500;
+$slice-height: .12 * $burger-height;
+$slice-gap: .17 * $burger-height;
+
+$slice-padding: (($burger-height - (3 * $slice-height) - (2 * $slice-gap)) / 2);
+$slice-transformY: ($slice-height + $slice-gap);
 
 .menu-burger {
     display: inline-block;
