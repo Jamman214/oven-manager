@@ -4,17 +4,40 @@
 // @import "bootstrap/scss/bootstrap";
 @import "./colours";
 
+$font-family-sans-serif:
+  // Cross-platform generic font family (default user interface font)
+  system-ui,
+  // Safari for macOS and iOS (San Francisco)
+  -apple-system,
+  // Windows
+  "Segoe UI",
+  // Android
+  Roboto,
+  // Basic web fallback
+  "Helvetica Neue", Arial,
+  // Linux
+  "Noto Sans",
+  "Liberation Sans",
+  // Sans serif fallback
+  sans-serif,
+  // Emoji fonts
+  "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !default;
+
+
 $border-width: 1px;
 $button-colour: $orange;
 
 body {
     background: $gray-900;
     margin: 0px;
+    font-family: $font-family-sans-serif;
 }
 
-// * {
-//     box-sizing: border-box;
-// }
+* {
+    box-sizing: border-box;
+}
+
+
 
 // input:focus,
 // select:focus {
