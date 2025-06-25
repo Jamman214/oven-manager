@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { MenuBurger } from "./MenuBurger.tsx";
 import { breakpoint_sm } from "../utility/breakpoints.tsx"
 
@@ -52,9 +52,9 @@ function NavBar({ brand, items }: NavBarProps) {
                 {items.map((item: NavItem, i) => {
                     if ("subitems" in item) {
                         return (
-                            <button type="button" className="nav-item expandable" key={i}>
-                                History
-                            </button>
+                                <button type="button" className="nav-item expandable" key={i}>
+                                    Create
+                                </button>
                             // <div className="navbar-dropdown" key={i}>
                             //     {item.subitems.map(
                             //         (subitem: TextRefPair, j) => {
