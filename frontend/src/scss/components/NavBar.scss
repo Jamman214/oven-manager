@@ -1,43 +1,55 @@
 @import "../colours.scss";
 @import "../breakpoints.scss";
 
+$change-at: 30rem;
 
-$navbar-background: $gray-900;
-$navbar-border: $gray-800;
+$navbar-background-colour: $gray-900;
+$navbar-border-colour: $gray-800;
 $navbar-colour: $gray-500;
 $navbar-colour-hover: $gray-300;
 $navbar-colour-active: $white;
 
-.navbar {
-    background: $navbar-background;
-    border-bottom: 2px solid $navbar-border;
+$navbar-item-height: 2.5rem;
 
-    padding: .5rem;
+.navbar {
+    background: $navbar-background-colour;
+
+    height: 3.75rem;
+    border-bottom: .25rem solid $navbar-border-colour;
+    padding: .5rem 1rem .5rem 1rem;
+    // Leaves 2.5rem hiehgt for children
+
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: baseline;
+    gap: 1rem;
 
-    @include sm_max {
+    container-type: size;
+    container-name: navbar;
+
+
+    @media (max-width: $change-at) {
         justify-content: space-between;
+        align-items: center;
     }
 }
 
-.navbar-brand {
-    flex-grow: 0;
-    
-    font-size: 1.5rem;
-    padding: .5rem;
+.navbar-brand {    
+    height: 100cqh;
+    font-size: 60cqh;
+    padding: 20cqh 0cqh 20cqh 0cqh;
 
     color: $white;
     text-decoration: none;
-
     
 }
 
 .navbar-collapse {
-    flex-grow: 1;
+    display: flex;
+    gap: 1rem;
 
     a {
+        font-size: 40cqh;
         color: $navbar-colour;
         text-decoration: none;
 
@@ -51,32 +63,25 @@ $navbar-colour-active: $white;
         }
     }
 
-    @include sm_max {
+    @media (max-width: $change-at) {
         display: none;
     }
 }
 
-.navbar-dropdown {
-    display: inline-block;
-}
-
 .navbar-toggle {
-    flex-grow: 0;
+    height: 100cqh;
+    width: 100cqh;
 
-    height: 2.5rem;
-    aspect-ratio: 1/1;
+    padding: 15cqh;
 
-    padding: .375rem;
-
-    background: $navbar-background;
-    border: .25rem solid $navbar-border;
-    border-radius: .5rem;
-    margin-right: .5rem;
+    background: $navbar-background-colour;
+    border: 10cqh solid $navbar-border-colour;
+    border-radius: 20cqh;
 
     container-type: size;
     container-name: menu-burger;
     
-    @include sm {
+    @media (min-width: calc($change-at + 0.02px)) {
         display: none;
     }
 }
