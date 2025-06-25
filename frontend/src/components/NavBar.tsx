@@ -52,29 +52,33 @@ function NavBar({ brand, items }: NavBarProps) {
                 {items.map((item: NavItem, i) => {
                     if ("subitems" in item) {
                         return (
-                            <div className="navbar-dropdown" key={i}>
-                                {item.subitems.map(
-                                    (subitem: TextRefPair, j) => {
-                                        return (
-                                            <NavLink
-                                                to={subitem.link}
-                                                key={j}
-                                                onClick={() =>
-                                                    setExpanded(
-                                                        false
-                                                    )
-                                                }
-                                            >
-                                                {subitem.text}
-                                            </NavLink>
-                                        );
-                                    }
-                                )}
-                            </div>
+                            <button type="button" className="nav-item expandable" key={i}>
+                                History
+                            </button>
+                            // <div className="navbar-dropdown" key={i}>
+                            //     {item.subitems.map(
+                            //         (subitem: TextRefPair, j) => {
+                            //             return (
+                            //                 <NavLink
+                            //                     to={subitem.link}
+                            //                     key={j}
+                            //                     onClick={() =>
+                            //                         setExpanded(
+                            //                             false
+                            //                         )
+                            //                     }
+                            //                 >
+                            //                     {subitem.text}
+                            //                 </NavLink>
+                            //             );
+                            //         }
+                            //     )}
+                            // </div>
                         );
                     }
                     return (
                         <NavLink
+                            className="nav-item"
                             to={item.link}
                             key={i}
                             onClick={() => setExpanded(false)}
