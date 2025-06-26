@@ -21,7 +21,7 @@ function App() {
                 items={[
                     { text: "Config", link: "/config" },
                     {
-                        text: "Presets",
+                        header: { text: "Presets", link: "/presets"},
                         subitems: [
                             { text: "Create", link: "/presets/create" },
                             { text: "Schedule", link: "/presets/schedule" },

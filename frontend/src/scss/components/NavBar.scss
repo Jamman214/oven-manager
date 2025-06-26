@@ -1,7 +1,8 @@
 @import "../colours.scss";
 @import "../breakpoints.scss";
 
-$change-at: 30rem;
+$change-below: 30rem;
+$change-above: calc($change-below + 0.02px);
 
 $navbar-background-colour: $gray-900;
 $navbar-border-colour: $gray-800;
@@ -20,17 +21,30 @@ $navbar-item-height: 2.5rem;
     // Leaves 2.5rem hiehgt for children
 
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: baseline;
-    gap: 1rem;
 
     container-type: size;
     container-name: navbar;
 
+    @media (min-width: $change-above) {
+        gap: 1rem;
+        flex-direction: row;
+    }
+    
+}
 
-    @media (max-width: $change-at) {
-        justify-content: space-between;
-        align-items: center;
+.navbar-static {
+    height: 100%;
+
+    display: flex;
+    flex-direction: row;
+
+    justify-content: space-between;
+    align-items: center;
+
+    @media (max-width: $change-below) {
+        width: 100%;
     }
 }
 
@@ -41,15 +55,18 @@ $navbar-item-height: 2.5rem;
 
     color: $white;
     text-decoration: none;
-    
 }
 
 .navbar-collapse {
     display: flex;
     gap: 1rem;
 
-    @media (max-width: $change-at) {
+    @media (max-width: $change-below) {
         display: none;
+    }
+
+    &.expanded {
+        display: block;
     }
 }
 
@@ -62,7 +79,6 @@ $navbar-item-height: 2.5rem;
     border: none;
 
     display: flex;
-
 
     &.expandable {
         padding-right: .45rem;
@@ -113,7 +129,7 @@ $navbar-item-height: 2.5rem;
     container-type: size;
     container-name: menu-burger;
     
-    @media (min-width: calc($change-at + 0.02px)) {
+    @media (min-width: $change-above) {
         display: none;
     }
 }
