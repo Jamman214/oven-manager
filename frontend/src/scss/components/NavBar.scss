@@ -1,22 +1,14 @@
 @import "../colours.scss";
 @import "../breakpoints.scss";
 
-$change-below: 30rem;
+$change-below: 35rem;
 $change-above: calc($change-below + 0.02px);
 
-$navbar-background-colour: $gray-900;
-$navbar-border-colour: $gray-800;
-$navbar-colour: $gray-500;
-$navbar-colour-hover: $gray-300;
-$navbar-colour-active: $white;
-
-$navbar-item-height: 2.5rem;
-
 .navbar {
-    background: $navbar-background-colour;
+    background: var(--background-color);
 
     height: 3.75rem;
-    border-bottom: .25rem solid $navbar-border-colour;
+    border-bottom: .25rem solid var(--border-color);
     padding: .5rem 1rem .5rem 1rem;
     // Leaves 2.5rem hiehgt for children
 
@@ -72,7 +64,7 @@ $navbar-item-height: 2.5rem;
 
 .nav-item {
     font-size: 40cqh;
-    color: $navbar-colour;
+    color: var(--text-color);
     text-decoration: none;
     background: none;
     padding: 0;
@@ -93,25 +85,25 @@ $navbar-item-height: 2.5rem;
             height: .25rem;
             width: .25rem;
             transform: rotate(45deg);
-            border: solid $navbar-colour;
+            border: solid var(--text-color);
             border-width: 0rem .125rem .125rem 0rem;
         }
         
     }
 
     &:hover {
-        color: $navbar-colour-hover;
+        color: var(--text-hover-color);
 
         &.expandable:hover::after {
-            border-color: $navbar-colour-hover;
+            border-color: var(--text-hover-color);
         }
     }
 
     &:active {
-        color: $navbar-colour-active;
+        color: var(text-color-active);
 
         &.expandable:hover::after {
-            border-color: $navbar-colour-active;
+            border-color: var(text-active-color);
         }
     }
 }
@@ -122,8 +114,8 @@ $navbar-item-height: 2.5rem;
 
     padding: 0px;
 
-    background: $navbar-background-colour;
-    border: 10cqh solid $navbar-border-colour;
+    background: var(--background-color);
+    border: 10cqh solid var(--border-color);
     border-radius: 20cqh;
 
     container-type: size;
