@@ -1,42 +1,43 @@
 @import "../colours.scss";
 
-$animation-duration: .2s;
-
-$slice-colour: $gray-500;
-$slice-height: 12cqh;
-$slice-gap: 17cqh;
-
-$slice-padding: ((100cqh - (3 * $slice-height) - (2 * $slice-gap)) / 2);
-$slice-transformY: ($slice-height + $slice-gap);
+$bar-height: 10cqh;
+$padding: 15cqh;
+$calc-content-size: 100cqh - (2 * $padding);
+$calc-bar-gap: (($calc-content-size / 3) - $bar-height);
+$bar-transformY: ($bar-height + $calc-bar-gap);
 
 .menu-burger {
-    display: inline-block;
-    width: 100%;
-    height: 100%;
+    height: 100cqh;
+    width: 100cqh;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+
+    padding: $padding;
 
     .topbar, .midbar, .botbar {
-        position: relative;
-        width: 100%;
-        height: $slice-height;
-        background: $slice-colour;
-        animation-duration: $animation-duration;
+        height: $bar-height;
+
+        background-color: var(--text-color);
+
+        animation-duration: .2s;
         animation-timing-function: ease-in;
         animation-fill-mode: forwards;
-
     }
 
-    .topbar {
-        margin-top: $slice-padding;
+    &:hover {
+        .topbar, .midbar, .botbar {
+            background-color: var(--text-hover-color);
+        }
     }
 
-    .midbar {
-        margin-top: $slice-gap;
-        margin-bottom: $slice-gap;
+    &:active {
+        .topbar, .midbar, .botbar {
+            background-color: var(--text-active-color);
+        }
     }
 
-    .botbar {
-        margin-bottom: $slice-padding;
-    }
 }
 
 
@@ -45,18 +46,18 @@ $slice-transformY: ($slice-height + $slice-gap);
         transform: translateY(0%) rotate(0deg);
     }
     50% {
-        transform: translateY($slice-transformY) rotate(0deg);
+        transform: translateY($bar-transformY) rotate(0deg);
     }
     100% {
-        transform: translateY($slice-transformY) rotate(45deg);
+        transform: translateY($bar-transformY) rotate(45deg);
     }
 }
 @keyframes top-bar-close {
     0% {
-        transform: translateY($slice-transformY) rotate(45deg);
+        transform: translateY($bar-transformY) rotate(45deg);
     }
     50% {
-        transform: translateY($slice-transformY) rotate(0deg);
+        transform: translateY($bar-transformY) rotate(0deg);
     }
     100% {
         transform: translateY(0%) rotate(0deg);
@@ -97,18 +98,18 @@ $slice-transformY: ($slice-height + $slice-gap);
         transform: translateY(0%) rotate(0deg);
     }
     50% {
-        transform: translateY(-$slice-transformY) rotate(0deg);
+        transform: translateY(-$bar-transformY) rotate(0deg);
     }
     100% {
-        transform: translateY(-$slice-transformY) rotate(-45deg);
+        transform: translateY(-$bar-transformY) rotate(-45deg);
     }
 }
 @keyframes bottom-bar-close {
     0% {
-        transform: translateY(-$slice-transformY) rotate(-45deg);
+        transform: translateY(-$bar-transformY) rotate(-45deg);
     }
     50% {
-        transform: translateY(-$slice-transformY) rotate(0deg);
+        transform: translateY(-$bar-transformY) rotate(0deg);
     }
     100% {
         transform: translateY(0%) rotate(0deg);
