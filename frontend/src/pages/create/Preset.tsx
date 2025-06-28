@@ -57,7 +57,8 @@ function TemperatureField({
         <>
             <label>{capitalise(limit)}</label>
             <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 {...register(
                     path, 
                     {
