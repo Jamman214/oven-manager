@@ -1,7 +1,7 @@
 @import "../colours.scss";
 @import "../breakpoints.scss";
 
-$breakpoint: 28em; // Magic number, should try to get rid of at some point
+$breakpoint: 28rem; // Magic number, should try to get rid of at some point
 $toggle-mode: $breakpoint;
 $link-mode: calc($breakpoint + 0.02px);
 $navbar-height: 4rem;
