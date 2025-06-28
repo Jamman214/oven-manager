@@ -20,7 +20,7 @@ import {
     type Sector, 
     limits, 
     type Limit
-} from "../../../validation/presets/create.tsx"
+} from "../../../validation/create/preset.tsx"
 
 import {usePostJson} from "../../hooks/usePostJSON.tsx";
 
@@ -144,7 +144,7 @@ function PresetCreate() {
 
 
     const [data, isLoading, error] = usePostJson(
-        "/api/set-preset/single",
+        "/api/create/preset",
         submitData,
         {
             requirements: () => submitData !== null,

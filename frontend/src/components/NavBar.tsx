@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { MenuBurger } from "./MenuBurger.tsx";
 import { breakpoint_sm } from "../utility/breakpoints.tsx"
+import { useClickOutside } from "../hooks/useClickOutside.tsx"
 
 import "../scss/components/NavBar.scss"
 
@@ -43,8 +44,12 @@ function CompoundNavItem({item, onClick}: CompoundNavItemProps) {
 
     const [expanded, setExpanded] = useState<boolean>(false);
 
+    const outsideClickHandler = () => {setExpanded(false)}
+
+    const ref = useClickOutside<HTMLDivElement>(outsideClickHandler, expanded);
+
     return (
-        <>
+        <div className="navgroup" ref={ref}>
             <button 
                 type="button" 
                 className={`nav-item expandable ${isHeaderActive ? "is-active" : ""}`}
@@ -53,13 +58,13 @@ function CompoundNavItem({item, onClick}: CompoundNavItemProps) {
                 { item.header.text } 
             </button>
             
-            { 
-                expanded && (
-                <div className="nav-item expanded">
+            { expanded && (
+                <div className="expanded-nav-item">
                     {
                         item.subitems.map(
                             (subitem: AtomicNavItem, i) => 
                                 <NavLink
+                                    className={({isActive})=>`nav-item ${isActive ? "is-active" : ""}`}
                                     to={subitem.link}
                                     key={i}
                                     onClick={() => {setExpanded(false); onClick?.();}}
@@ -71,32 +76,10 @@ function CompoundNavItem({item, onClick}: CompoundNavItemProps) {
                         )
                     }
                 </div>
-            )
-
-                // <div className="navbar-dropdown" key={i}>
-                //     {item.subitems.map(
-                //         (subitem: TextRefPair, j) => {
-                //             return (
-                //                 <NavLink
-                //                     to={subitem.link}
-                //                     key={j}
-                //                     onClick={() =>
-                //                         setExpanded(
-                //                             false
-                //                         )
-                //                     }
-                //                 >
-                //                     {subitem.text}
-                //                 </NavLink>
-                //             );
-                //         }
-                //     )}
-                // </div>
-            }
-        </>
+            )}
+        </div>
     )
 }
-
 
 
 
@@ -129,7 +112,7 @@ function NavBar({ brand, items }: NavBarProps) {
         window.addEventListener('resize', handleResize);
     }, []);
 
-    return (
+    return (<>
         <div className="navbar">
             <div className="navbar-static">
                 <NavLink className="navbar-brand"
@@ -163,6 +146,7 @@ function NavBar({ brand, items }: NavBarProps) {
                 })}
             </div>
         </div>
+        </>
     );
 }
 

@@ -1,10 +1,10 @@
 @import "../colours.scss";
 
-$bar-height: 10cqh;
+$bar-height: var(--border-width);
 $padding: 15cqh;
-$calc-content-size: 100cqh - (2 * $padding);
-$calc-bar-gap: (($calc-content-size / 3) - $bar-height);
-$bar-transformY: ($bar-height + $calc-bar-gap);
+$calc-content-size: calc(100cqh - (2 * $padding));
+$calc-bar-gap: calc(($calc-content-size / 3) - $bar-height);
+$bar-transformY: calc($bar-height + $calc-bar-gap);
 
 .menu-burger {
     height: 100cqh;
@@ -98,18 +98,18 @@ $bar-transformY: ($bar-height + $calc-bar-gap);
         transform: translateY(0%) rotate(0deg);
     }
     50% {
-        transform: translateY(-$bar-transformY) rotate(0deg);
+        transform: translateY(calc(0px - $bar-transformY)) rotate(0deg);
     }
     100% {
-        transform: translateY(-$bar-transformY) rotate(-45deg);
+        transform: translateY(calc(0px - $bar-transformY)) rotate(-45deg);
     }
 }
 @keyframes bottom-bar-close {
     0% {
-        transform: translateY(-$bar-transformY) rotate(-45deg);
+        transform: translateY(calc(0px - $bar-transformY)) rotate(-45deg);
     }
     50% {
-        transform: translateY(-$bar-transformY) rotate(0deg);
+        transform: translateY(calc(0px - $bar-transformY)) rotate(0deg);
     }
     100% {
         transform: translateY(0%) rotate(0deg);

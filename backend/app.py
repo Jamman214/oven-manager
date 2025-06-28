@@ -7,13 +7,13 @@ app = Flask(__name__)
 load_dotenv()
 app.config.from_prefixed_env()
 
-@app.route("/get-presets/single", methods=["GET"])
+@app.route("/get/presets", methods=["GET"])
 def get_presets_single():
     return jsonify([{"id":0, "name":"Hot"}, {"id":1, "name":"Medium"}, {"id":2, "name":"Cold"}])
 
 
 
-@app.route("/set-preset/single", methods=["POST"])
+@app.route("/create/preset", methods=["POST"])
 def set_preset_single():
     min_temp = 0
     max_temp = 500
@@ -46,7 +46,7 @@ def set_preset_single():
 
 
 
-@app.route("/set-preset/multiple", methods=["POST"])
+@app.route("/create/schedule", methods=["POST"])
 def set_preset_multiple():
     max_preset_id = 10 # Temp value before db
     

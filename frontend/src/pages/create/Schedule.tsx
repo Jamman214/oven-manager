@@ -15,7 +15,7 @@ import {type SubmitAction, SubmitButton} from "../../components/SubmitButton.tsx
 import {usePostJson} from "../../hooks/usePostJSON.tsx";
 import {useGetJson} from "../../hooks/useGetJSON.tsx";
 
-import { formSchema, type FormInput, type FormOutput}  from "../../../validation/presets/schedule.tsx"
+import { formSchema, type FormInput, type FormOutput}  from "../../../validation/create/schedule.tsx"
 
 interface TimeProps {
     index: number
@@ -82,7 +82,7 @@ function FormFields({timeFields, presetFields} : FormFieldsProps) {
     } = useFormContext<FormInput, unknown, FormOutput>();
 
     const [data, isLoading, error] = useGetJson<Item[]>(
-        "/api/get-presets/single",
+        "/api/get/presets",
         z.array(z.object({
             id: z.number().min(0),
             name: z.string().min(1)
@@ -157,7 +157,7 @@ function PresetSchedule() {
     const [dataToSend, sendData] = useState<FormValues | null>(null);
 
     const [data, isLoading, error] = usePostJson(
-        "/api/set-preset/multiple",
+        "/api/create/schedule",
         dataToSend,
         {
             requirements: () => dataToSend !== null,
