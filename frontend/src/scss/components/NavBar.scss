@@ -1,9 +1,9 @@
 @import "../colours.scss";
 @import "../breakpoints.scss";
 
-$breakpoint: 60rem; // toggle mode
+$breakpoint: 28em; // Magic number, should try to get rid of at some point
 $toggle-mode: $breakpoint;
-$link-mode: calc($breakpoint + 0.02px); // link mode
+$link-mode: calc($breakpoint + 0.02px);
 $navbar-height: 4rem;
 
 .navbar {
@@ -98,8 +98,6 @@ $toggle-size: calc(var(--font-size-lg) + (2 * var(--padding-sm)));
 
         padding: var(--padding-sm) 0px var(--padding-sm) var(--padding-md);
         border-bottom: var(--border);
-
-        // line-height: 1.5;
 
         display: block;
     }
