@@ -8,6 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import ErrorAlert from "../../components/ErrorAlert.tsx";
 import {type SubmitAction, SubmitButton} from "../../components/SubmitButton.tsx";
+import {FloatingInput} from "../../components/FloatingInput.tsx";
+
 
 import {
     formSchema, 
@@ -23,6 +25,8 @@ import {
 } from "../../../validation/create/preset.tsx"
 
 import {usePostJson} from "../../hooks/usePostJSON.tsx";
+
+import "../../scss/pages/create/Preset.scss"
 
 function capitalise(word: string) {
     return word.charAt(0).toUpperCase() + word.slice(1);
@@ -51,25 +55,18 @@ function TemperatureField({
 
 
     const onBlur = async () => {await trigger()};
-    // const onBlur = () => {}
     
     return (
-        <>
-            <label>{capitalise(limit)}</label>
-            <input
-                type="text"
-                inputMode="numeric"
-                {...register(
-                    path, 
-                    {
-                        valueAsNumber: true,
-                        onBlur
-                    }
-                )}
-                placeholder=" "
-            />
-            <ErrorAlert error={errors.form?.[sector]?.[limit]?.message}/>
-        </>
+        <FloatingInput
+            text={limit}
+            id={path}
+            inputProps={{
+                type: "text",
+                inputMode: "numeric",
+                ...register(path, {valueAsNumber: true, onBlur}),
+                placeholder: " "
+            }}
+        />
     );
 }
 
@@ -89,6 +86,7 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
                     <TemperatureField
                         sector={sector}
                         limit={limit}
+                        key={i}
                     />
             ))}
             <ErrorAlert 

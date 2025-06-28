@@ -1,0 +1,15 @@
+@import "../../colours";
+@import "../../components/FloatingInput.scss";
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+label {
+    color: $white;
+    text-align: left;
+    width: calc(100% - (2 * var(--padding-md)));
+    line-height: 2;
+}

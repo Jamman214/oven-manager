@@ -30,6 +30,7 @@ const sectorSchema = z.object({
             high: z.number().nullable(),
             low: z.number().nullable()
         }).superRefine((data, ctx) => {
+            console.log("test");
             if (data.high !== null && data.low !== null && data.high < data.low) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,

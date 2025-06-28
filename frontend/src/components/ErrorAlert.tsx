@@ -10,7 +10,7 @@ function ErrorAlert({error}: Props) {
         return <></>;
     }
 
-    return error;
+    return <div className="error">error</div>;
 }
 
 export default ErrorAlert

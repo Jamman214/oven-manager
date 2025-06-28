@@ -1,0 +1,35 @@
+
+.floating-input {
+    position: relative;
+    width: calc(100% - (2 * var(--padding-md)));
+
+    label {
+        position: absolute;
+        color: var(--text-color);
+        display: inline-block;
+
+        font-size: var(--font-size-md);
+        line-height: 2;
+        padding: var(--padding-sm);
+        padding-left: var(--padding-md);
+    }
+
+    input {
+        width: 100%;
+        line-height: 2;
+        padding-top: var(--padding-md);
+        padding-bottom: 0;
+        text-align: bottom;
+    }
+}
+
+.floating-input:has(input:where(:not(:placeholder-shown), :focus)) {
+
+    label {
+        font-size: var(--font-size-sm);
+        line-height: 2;
+        padding: 0px;
+        padding-left: var(--padding-md);
+    }
+
+}

@@ -17,9 +17,11 @@
     --border: var(--border-width) solid var(--border-color);
     --border-radius: .5rem;
 
+    --padding-xs: .25rem;
     --padding-sm: .5rem;
     --padding-md: 1rem;
 
+    --font-size-sm: .75rem;
     --font-size-md: 1rem;
     --font-size-lg: 1.5rem;
 }
@@ -57,6 +59,58 @@ body {
     box-sizing: border-box;
 }
 
+input {
+    width: calc(100% - (2 * var(--padding-md)));
+    background: var(--background-color);
+    font-size: var(--font-size);
+    line-height: 1.5;
+    padding: var(--padding-sm);
+    padding-left: var(--padding-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: $white;
+}
+
+input:focus {
+    border: 1px solid $orange-400;
+    border-radius: var(--border-radius);
+    outline: None;
+    box-shadow: 0px 0px 10px 5px $orange-800;
+}
+
+button[type="submit"] {
+    color: $white;
+    background: $orange-600;
+    border: 1px solid $orange-500;
+    border-radius: var(--border-radius);
+    padding: var(--padding-sm) var(--padding-md) var(--padding-sm) var(--padding-md);
+
+    &:focus,
+    &:hover {
+        border-color: $orange-400;
+        box-shadow: 0px 0px 10px 5px $orange-800;
+    }
+    &:active {
+        background: $orange-500;
+        border-color: $orange-300;
+        box-shadow: 0px 0px 10px 5px $orange-700;
+    }
+} 
+
+.error {
+    width: calc(100% - (2 * var(--padding-md)));
+    border: 1px solid $red-700;
+    border-radius: var(--border-radius);
+    
+    color: $white;
+    
+    background: $red-900;
+
+    padding: var(--padding-sm) var(--padding-md) var(--padding-sm) var(--padding-md);
+}
+
+
+
 
 
 // input:focus,
@@ -67,26 +121,7 @@ body {
 //     box-shadow: 0px 0px 10px 5px $orange-800;
 // }
 
-// button {
-//     background: $orange-600;
-//     border: $border-width solid $orange-500;
 
-//     &:focus,
-//     &:hover {
-//         border: $border-width solid $orange-400;
-//         border-radius: var(--bs-border-radius);
-//         outline: None;
-//         box-shadow: 0px 0px 10px 5px $orange-800;
-//     }
-//     &:active {
-//         background: $orange-500;
-//         border: 1px solid $orange-300;
-//         border-radius: var(--bs-border-radius);
-//         outline: None;
-//         box-shadow: 0px 0px 10px 5px $orange-700;
-//     }
-//     margin-bottom: 60px;
-// } 
 
 // .alert {
 //     margin-bottom: 0px;
