@@ -1,5 +1,7 @@
 @import "../../colours";
 @import "../../components/FloatingInput.scss";
+@import "../../components/EditableDropdown.scss";
+
 
 $formWidth: clamp(0px, calc(100% - (2 * var(--padding-md))), 25rem);
 
@@ -7,23 +9,40 @@ form {
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding-top: var(--padding-md);
 
-    .floating-input {
+    label {
+        color: $white;
+        text-align: left;
         width: $formWidth;
+        line-height: 2;
     }
-}
 
-label {
-    color: $white;
-    text-align: left;
-    width: $formWidth;
-    line-height: 2;
-}
+    fieldset {
+        width: $formWidth;
+        margin: 0px;
+        margin-top: var(--padding-sm);
+        padding: 0px;
+        padding-top: var(--padding-xs);
 
-.error {
-    width: $formWidth;
-}
+        display: flex;
+        flex-direction: column;
+        align-items: center;
 
-.group-label {
-    margin-top: var(--padding-sm);
+        border: none;
+
+        legend {
+            color: $white;
+        }
+
+        .floating-input, .error {
+            width: 100%;
+        }
+        
+    }
+
+    .editable-dropdown {
+        width: $formWidth;
+        margin-bottom: var(--padding-sm);
+    }
 }

@@ -1,16 +1,14 @@
-import {type ComponentProps} from "react";
+import {type ComponentProps, type ReactNode} from "react";
 
-interface Props {
+interface Props extends ComponentProps<"label"> {
     text: string;
-    id?: string;
-    labelProps?: Omit<ComponentProps<"label">, "for">;
-    inputProps?: Omit<ComponentProps<"input">, "id">;
+    children?: ReactNode
 }
 
-function FloatingInput ({text, id, labelProps, inputProps}: Props) {
+function FloatingInput ({text, children, ...labelProps}: Props) {
     return <div className="floating-input">
-        <label {...{htmlFor: id, ...labelProps}}>{text}</label>
-        <input {...{id: id, ...inputProps}}/>
+        <label {...labelProps}>{text}</label>
+        {children}
     </div>
 }
 

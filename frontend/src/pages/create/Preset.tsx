@@ -9,6 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import ErrorAlert from "../../components/ErrorAlert.tsx";
 import {type SubmitAction, SubmitButton} from "../../components/SubmitButton.tsx";
 import {FloatingInput} from "../../components/FloatingInput.tsx";
+import {EditableDropdown} from "../../components/EditableDropdown.tsx";
+
 
 
 import {
@@ -61,14 +63,15 @@ function TemperatureField({
     return <>
         <FloatingInput
             text={limit}
-            id={path}
-            inputProps={{
-                type: "text",
-                inputMode: "numeric",
-                ...register(path, {valueAsNumber: true, onBlur}),
-                placeholder: " "
-            }}
-        />
+            htmlFor={path}
+        >
+            <input 
+                type="text"
+                inputMode="numeric"
+                {...register(path, {valueAsNumber: true, onBlur})}
+                placeholder=" "
+            />
+        </FloatingInput>
         <ErrorAlert 
             error={fieldError?.message}
         />
@@ -83,9 +86,8 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
     const fieldError = errors.form?.[sector];
 
     return (
-        <>
-    
-            <label className="group-label">{capitalise(sector)} Temperature</label>
+        <fieldset>
+            <legend className="group-label">{capitalise(sector)} Temperature</legend>
             {limits.map((limit, i) => (
                 
                     <TemperatureField
@@ -103,7 +105,7 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
                     error={errors?.form?.message}
                 />
             }
-        </>
+        </fieldset>
     );
 }
 
@@ -114,6 +116,11 @@ function FormFields() {
 
     return (
         <>
+            <EditableDropdown>
+                <FloatingInput htmlFor="name" text="name">
+                    <input type="text" placeholder=" " id="name"></input>
+                </FloatingInput>
+            </EditableDropdown>
             {sectors.map((sector, i) => (
                 <SectorFieldGroup
                     key={i}

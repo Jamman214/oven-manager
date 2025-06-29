@@ -11,6 +11,8 @@
         line-height: 2;
         padding: var(--padding-sm);
         padding-left: var(--padding-md);
+
+        pointer-events: none; 
     }
 
     input {
