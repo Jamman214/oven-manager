@@ -159,6 +159,7 @@ $toggle-size: calc(var(--font-size-lg) + (2 * var(--padding-sm)));
 
 .expanded-nav-item {
     padding-left: var(--padding-md);
+    z-index: 1;
 
     @media (min-width: $link-mode) {
         position: absolute;

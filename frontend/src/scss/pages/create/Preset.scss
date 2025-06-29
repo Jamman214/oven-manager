@@ -1,15 +1,29 @@
 @import "../../colours";
 @import "../../components/FloatingInput.scss";
 
+$formWidth: clamp(0px, calc(100% - (2 * var(--padding-md))), 25rem);
+
 form {
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    .floating-input {
+        width: $formWidth;
+    }
 }
 
 label {
     color: $white;
     text-align: left;
-    width: calc(100% - (2 * var(--padding-md)));
+    width: $formWidth;
     line-height: 2;
+}
+
+.error {
+    width: $formWidth;
+}
+
+.group-label {
+    margin-top: var(--padding-sm);
 }

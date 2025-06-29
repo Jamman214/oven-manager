@@ -53,10 +53,12 @@ function TemperatureField({
         || errors.form?.message
     )
 
+    const fieldError = errors.form?.[sector]?.[limit];
+
 
     const onBlur = async () => {await trigger()};
     
-    return (
+    return <>
         <FloatingInput
             text={limit}
             id={path}
@@ -67,7 +69,10 @@ function TemperatureField({
                 placeholder: " "
             }}
         />
-    );
+        <ErrorAlert 
+            error={fieldError?.message}
+        />
+    </>;
 }
 
 function SectorFieldGroup({sector,}: {sector: Sector;}) {
@@ -80,7 +85,7 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
     return (
         <>
     
-            <label>{capitalise(sector)} Temperature</label>
+            <label className="group-label">{capitalise(sector)} Temperature</label>
             {limits.map((limit, i) => (
                 
                     <TemperatureField

@@ -69,6 +69,7 @@ input {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     color: $white;
+    margin-bottom: var(--padding-sm);
 }
 
 input:focus {
@@ -84,6 +85,10 @@ button[type="submit"] {
     border: 1px solid $orange-500;
     border-radius: var(--border-radius);
     padding: var(--padding-sm) var(--padding-md) var(--padding-sm) var(--padding-md);
+    margin-top: var(--padding-md);
+    font-size: var(--font-size);
+    line-height: 1.5;
+    font-weight: normal;
 
     &:focus,
     &:hover {
@@ -98,15 +103,15 @@ button[type="submit"] {
 } 
 
 .error {
-    width: calc(100% - (2 * var(--padding-md)));
-    border: 1px solid $red-700;
+    border: 1px solid $red-300;
     border-radius: var(--border-radius);
     
-    color: $white;
+    color: $red-300;
     
     background: $red-900;
 
     padding: var(--padding-sm) var(--padding-md) var(--padding-sm) var(--padding-md);
+    margin-bottom: var(--padding-sm);
 }
 
 
