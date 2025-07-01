@@ -17,6 +17,11 @@
     --border: var(--border-width) solid var(--border-color);
     --border-radius: .5rem;
 
+    --overlay-background-color: #{$gray-800};
+    --overlay-background-hover-color: #{$gray-700};
+    --overlay-border-color: #{$gray-400};
+    --overlay-border: var(--border-width) solid var(--overlay-border-color);
+
     --padding-xs: .25rem;
     --padding-sm: .5rem;
     --padding-md: 1rem;
@@ -60,7 +65,6 @@ body {
 }
 
 input {
-    width: calc(100% - (2 * var(--padding-md)));
     background: var(--background-color);
     font-size: var(--font-size);
     line-height: 1.5;

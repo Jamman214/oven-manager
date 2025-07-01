@@ -7,8 +7,8 @@ interface Props extends ComponentProps<"label"> {
 
 function FloatingInput ({text, children, ...labelProps}: Props) {
     return <div className="floating-input">
-        <label {...labelProps}>{text}</label>
         {children}
+        <label {...labelProps}>{text}</label>
     </div>
 }
 

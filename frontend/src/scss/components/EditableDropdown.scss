@@ -1,51 +1,103 @@
 @import "../colours.scss";
 // Need more variables to calc height easier
 .editable-dropdown {
+    position: relative;
+
     display: flex;
     direction: row;
+    justify-content: space-between;
 
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
 
     &:has(input:focus) {
         border: 1px solid $orange-400;
+
         box-shadow: 0px 0px 10px 5px $orange-800;
     }
 
-    .floating-input, input {
-        flex-grow: 1;
-    }
-
     input {
+        flex-grow: 1;
+
         border: none;
         margin: 0px;
         
         &:focus {
             border: none;
+
             box-shadow: none;
         }
     }
 
-    button {
-        flex-grow: 0;
-        aspect-ratio: 1/1;
-        background: var(--background-color);
+    .dropdown-toggle {
+        position: relative;
+
+        padding-left: var(--padding-md);
+        padding-right: var(--padding-md);
         border: none;
         border-radius: var(--border-radius);
+
+        background: var(--background-color);
         color: $white;
-        position: relative;
         
         &::after {
-            content: "";
-            display: inline-block;
             position: relative;
             bottom: calc(var(--font-size-md) / 8);
-
+            
+            display: inline-block;
+            
             height: calc(var(--font-size-md) / 2);
             width: calc(var(--font-size-md) / 2);
-            transform: rotate(45deg);
             border: solid var(--text-color);
             border-width: 0rem .1rem .1rem 0rem;
+
+            content: "";
+            
+            transform: rotate(45deg);
+        }
+    }
+
+    .dropdown:not(.expanded) {
+        display: none;
+    }
+
+    .dropdown.expanded {
+        position: absolute;
+        top: 100%;
+
+        display: flex;
+        flex-direction: column;
+
+        padding-left: var(--padding-md);
+        z-index: 1;
+
+        
+        
+        
+        
+
+        width: 100%;
+
+        padding: var(--padding-sm);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+
+        background: var(--overlay-background-color);
+
+        button {
+            padding: 0px var(--padding-sm) 0px var(--padding-sm);
+            border: none;
+            border-radius: var(--border-radius);
+
+            font-size: var(--font-size-md);
+            line-height: 1.5;
+            text-align: left;
+            background: var(--overlay-background-color);
+            color: $white;
+        }
+
+        button:hover {
+            background: var(--overlay-background-hover-color);
         }
     }
 }

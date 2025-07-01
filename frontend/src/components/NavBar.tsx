@@ -45,7 +45,6 @@ function CompoundNavItem({item, onClick}: CompoundNavItemProps) {
     const [expanded, setExpanded] = useState<boolean>(false);
 
     const outsideClickHandler = () => {setExpanded(false)}
-
     const ref = useClickOutside<HTMLDivElement>(outsideClickHandler, expanded);
 
     return (
@@ -64,10 +63,10 @@ function CompoundNavItem({item, onClick}: CompoundNavItemProps) {
                         item.subitems.map(
                             (subitem: AtomicNavItem, i) => 
                                 <NavLink
-                                    className={({isActive})=>`nav-item ${isActive ? "is-active" : ""}`}
+                                    className={({isActive, isPending})=>`nav-item ${isActive || isPending ? "is-active" : ""}`}
                                     to={subitem.link}
                                     key={i}
-                                    onClick={() => {setExpanded(false); onClick?.();}}
+                                    onClick={() => {setExpanded(false); onClick?.()}}
                                 >
                                     {subitem.text}
                                 </NavLink>
@@ -102,7 +101,6 @@ function NavBar({ brand, items }: NavBarProps) {
     // Also prevents animation from playing when screen gets smaller again
     useEffect(() => {
         function handleResize() {
-            console.log("handled")
             if (window.innerWidth >= breakpoint_sm) {
                 // If the screen isn't small, unexpand it
                 setExpanded(false);

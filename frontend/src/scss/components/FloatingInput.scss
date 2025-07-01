@@ -2,35 +2,44 @@
 .floating-input {
     position: relative;
 
-    label {
+    & > label {
         position: absolute;
-        color: var(--text-color);
+        left: 0px;
+        top: 0px;
+
         display: inline-block;
+
+        padding: var(--padding-sm);
+        padding-left: var(--padding-md);
 
         font-size: var(--font-size-md);
         line-height: 2;
-        padding: var(--padding-sm);
-        padding-left: var(--padding-md);
+        color: var(--text-color);
 
         pointer-events: none; 
     }
 
-    input {
+    &:has(input:where(:not(:placeholder-shown), :focus)) {
+        label {
+            padding-top: 0px;
+            padding-right: 0px;
+            padding-bottom: 0px;
+
+            font-size: var(--font-size-sm);
+        }
+    }
+
+    > * {
         width: 100%;
-        line-height: 2;
+        margin-bottom: 0px !important;
+    }
+
+    
+    input {
         padding-top: var(--padding-md);
         padding-bottom: 0;
+
+        line-height: 2;
         text-align: bottom;
     }
-}
-
-.floating-input:has(input:where(:not(:placeholder-shown), :focus)) {
-
-    label {
-        font-size: var(--font-size-sm);
-        line-height: 2;
-        padding: 0px;
-        padding-left: var(--padding-md);
-    }
-
 }

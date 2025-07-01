@@ -116,11 +116,23 @@ function FormFields() {
 
     return (
         <>
-            <EditableDropdown>
-                <FloatingInput htmlFor="name" text="name">
-                    <input type="text" placeholder=" " id="name"></input>
+            <fieldset>
+                <legend className="group-label">Preset</legend>
+                <FloatingInput
+                    text="Name"
+                    htmlFor="name"
+                >
+                    <EditableDropdown 
+                        inputProps={{id:"name", placeholder:" "}}
+                        defaultItem={{value:"", text:"new", editText:""}}
+                        items={[{value:"1", text:"item1", editText:"item1"}]}
+                    >
+                        {/* <FloatingInput htmlFor="name" text="name">
+                            <input type="text" placeholder=" " id="name"></input>
+                        </FloatingInput> */}
+                    </EditableDropdown>
                 </FloatingInput>
-            </EditableDropdown>
+            </fieldset>
             {sectors.map((sector, i) => (
                 <SectorFieldGroup
                     key={i}

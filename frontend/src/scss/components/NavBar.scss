@@ -136,7 +136,7 @@ $toggle-size: calc(var(--font-size-lg) + (2 * var(--padding-sm)));
         
     }
 
-    &:hover {
+    &:hover, &:not(.is-active):has(~.expanded-nav-item:hover) {
         color: var(--text-hover-color);
 
         &.expandable:hover::after {
@@ -144,11 +144,11 @@ $toggle-size: calc(var(--font-size-lg) + (2 * var(--padding-sm)));
         }
     }
 
-    &:active {
-        color: var(text-color-active);
+    &:active, &.is-active {
+        color: var(--text-active-color);
 
         &.expandable:hover::after {
-            border-color: var(text-active-color);
+            border-color: var(--text-active-color);
         }
     }
 }
