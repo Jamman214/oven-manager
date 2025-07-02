@@ -25,6 +25,7 @@
     --padding-xs: .25rem;
     --padding-sm: .5rem;
     --padding-md: 1rem;
+    --padding-lg: 2rem;
 
     --font-size-sm: .75rem;
     --font-size-md: 1rem;
@@ -89,7 +90,6 @@ button[type="submit"] {
     border: 1px solid $orange-500;
     border-radius: var(--border-radius);
     padding: var(--padding-sm) var(--padding-md) var(--padding-sm) var(--padding-md);
-    margin-top: var(--padding-md);
     font-size: var(--font-size);
     line-height: 1.5;
     font-weight: normal;
@@ -115,7 +115,6 @@ button[type="submit"] {
     background: $red-900;
 
     padding: var(--padding-sm) var(--padding-md) var(--padding-sm) var(--padding-md);
-    margin-bottom: var(--padding-sm);
 }
 
 

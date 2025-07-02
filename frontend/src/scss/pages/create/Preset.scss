@@ -36,4 +36,9 @@ form {
             margin-bottom: var(--padding-sm);
         }
     }
+
+    button[type="submit"] {
+        margin-top: var(--padding-md);
+        margin-bottom: var(--padding-lg);
+    }
 }
