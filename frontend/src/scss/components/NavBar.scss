@@ -118,14 +118,14 @@ $toggle-size: calc(var(--font-size-lg) + (2 * var(--padding-sm)));
     background: none;
 
     &.expandable {
-        padding-right: .45rem;
+        padding-right: var(--padding-xs);
 
         &::after {
             content: "";
             display: inline-block;
-            position: relative;
-            left: .35rem;
-            top: .4rem;
+            margin-left: var(--padding-xs);
+            margin-top: auto;
+            margin-bottom: auto;
 
             height: .25rem;
             width: .25rem;
@@ -139,7 +139,7 @@ $toggle-size: calc(var(--font-size-lg) + (2 * var(--padding-sm)));
     &:hover, &:not(.is-active):has(~.expanded-nav-item:hover) {
         color: var(--text-hover-color);
 
-        &.expandable:hover::after {
+        &.expandable::after {
             border-color: var(--text-hover-color);
         }
     }
@@ -147,7 +147,7 @@ $toggle-size: calc(var(--font-size-lg) + (2 * var(--padding-sm)));
     &:active, &.is-active {
         color: var(--text-active-color);
 
-        &.expandable:hover::after {
+        &.expandable::after {
             border-color: var(--text-active-color);
         }
     }
