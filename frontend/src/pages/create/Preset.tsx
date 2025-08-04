@@ -1,4 +1,4 @@
-import {useState} from "react"
+import {useState, useRef, useMemo, useEffect} from "react"
 import {
     useForm,
     FormProvider,
@@ -19,19 +19,103 @@ import {
     type FormInput, 
     type FormOutput, 
     type SubmittableForm, 
-    type FormData,
+    type ValidationMode,
     sectors, 
     type Sector, 
     limits, 
     type Limit
 } from "../../../validation/create/preset.tsx"
 
+import {useGetJson} from "../../hooks/useGetJSON.tsx";
 import {usePostJson} from "../../hooks/usePostJSON.tsx";
 
 import "../../scss/pages/create/Preset.scss"
 
 function capitalise(word: string) {
     return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
+interface NameFieldProps {
+    onReset: () => void;
+}
+
+function NameField({onReset}: NameFieldProps) {
+    const {
+        reset,
+        formState: { errors },
+        register
+    } = useFormContext<FormInput, unknown, FormOutput>();
+
+    const [value, setValue] = useState("");
+    const [counter, setCounter] = useState(0);
+
+    const [data, isLoading, error] = useGetJson(
+        "/api/create/preset",
+        formSchema("submitted"),
+        {
+            requirements: () => value !== "",
+            dependencies: [counter]
+        }
+    )
+    
+    useEffect(() => {
+        if (value === "") {
+            reset({
+                name: "",
+                temperatures: {
+                    core: {
+                        high: null,
+                        low: null
+                    },
+                    oven: {
+                        high: null,
+                        low: null
+                    }
+                }
+            })
+        }
+    }, [counter])
+
+
+
+    const onClick = (
+        e: React.MouseEvent<HTMLButtonElement, MouseEvent>, 
+        {value, editText}: {value: string, editText: string}
+    ) => {
+        onReset();
+        reset({
+            name: editText,
+            temperatures: {
+                core: {
+                    high: null,
+                    low: null
+                },
+                oven: {
+                    high: null,
+                    low: null
+                }
+            }
+        })
+    }
+
+    return (
+        <>
+            <FloatingInput
+                text="Name"
+                htmlFor="name"
+            >
+                <EditableDropdown 
+                    inputProps={{id:"name", placeholder:" ", ...register("name")}}
+                    itemProps={{onClick}}
+                    defaultItem={{value:"", text:"new", editText:""}}
+                    items={[{value:"1", text:"item1", editText:"item1"}]}
+                />
+            </FloatingInput>
+            <ErrorAlert 
+                error={errors?.name?.message}
+            />
+        </>
+    );
 }
 
 function TemperatureField({
@@ -47,18 +131,20 @@ function TemperatureField({
         formState: { errors },
     } = useFormContext<FormInput, unknown, FormOutput>();
 
-    const path = `form.${sector}.${limit}` as const;
+    const path = `temperatures.${sector}.${limit}` as const;
 
     const isInvalid = Boolean(
-        errors.form?.[sector]?.[limit]?.message
-        || errors.form?.[sector]?.message
-        || errors.form?.message
+        errors.temperatures?.[sector]?.[limit]?.message
+        || errors.temperatures?.[sector]?.message
+        || errors.temperatures?.message
     )
 
-    const fieldError = errors.form?.[sector]?.[limit];
+    const fieldError = errors.temperatures?.[sector]?.[limit];
 
 
-    const onBlur = async () => {await trigger()};
+    const onBlur = async () => {
+        await trigger("temperatures")
+    };
     
     return <>
         <FloatingInput
@@ -83,7 +169,7 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
         formState: { errors },
     } = useFormContext<FormInput, unknown, FormOutput>();
 
-    const fieldError = errors.form?.[sector];
+    const fieldError = errors.temperatures?.[sector];
 
     return (
         <fieldset>
@@ -102,36 +188,29 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
             {
                 sector === 'oven' &&
                 <ErrorAlert 
-                    error={errors?.form?.message}
+                    error={errors?.temperatures?.message}
                 />
             }
         </fieldset>
     );
 }
 
-function FormFields() {
+interface FormFieldsProps {
+    onReset: () => void;
+}
+
+
+function FormFields({onReset}: FormFieldsProps) {
     const {
         formState: { errors },
+        register
     } = useFormContext<FormInput, unknown, FormOutput>();
 
     return (
         <>
             <fieldset>
                 <legend className="group-label">Preset</legend>
-                <FloatingInput
-                    text="Name"
-                    htmlFor="name"
-                >
-                    <EditableDropdown 
-                        inputProps={{id:"name", placeholder:" "}}
-                        defaultItem={{value:"", text:"new", editText:""}}
-                        items={[{value:"1", text:"item1", editText:"item1"}]}
-                    >
-                        {/* <FloatingInput htmlFor="name" text="name">
-                            <input type="text" placeholder=" " id="name"></input>
-                        </FloatingInput> */}
-                    </EditableDropdown>
-                </FloatingInput>
+                <NameField onReset={onReset}/>
             </fieldset>
             {sectors.map((sector, i) => (
                 <SectorFieldGroup
@@ -144,11 +223,17 @@ function FormFields() {
 }
 
 function PresetCreate() {
+    const [validationMode, setValidationMode] = useState<ValidationMode>("unsubmitted");
+    const validationEvent = useRef<React.BaseSyntheticEvent | undefined>(undefined);
+
     const { ...methods } = useForm<FormInput, unknown, FormOutput>({
-        resolver: zodResolver(formSchema),
-        mode: "onSubmit",
+        resolver: zodResolver(
+            formSchema(validationMode)
+        ),
+        mode: "onBlur",
         defaultValues: {
-            form: {
+            name: null,
+            temperatures: {
                 core: {
                     high: null,
                     low: null
@@ -158,12 +243,13 @@ function PresetCreate() {
                     low: null
                 }
             }
-        }
-    });
+        },
+    }
+    );
 
     const { handleSubmit, setError, setValue } = methods;
 
-    const [submitData, setSubmitData] = useState<FormData<SubmittableForm> | null>(null)
+    const [submitData, setSubmitData] = useState<SubmittableForm | null>(null)
 
 
     const [data, isLoading, error] = usePostJson(
@@ -182,33 +268,36 @@ function PresetCreate() {
         : "RESET"
     )
 
-    // Produce error and remove default null value from any null fields
-    const showNullError = (data: FormOutput, sector: Sector, limit: Limit) => {
-        if (data.form?.[sector][limit] !== null) return;
-        const path = `form.${sector}.${limit}` as const;
-        setError(path, { type: "custom", message: "Must enter a number" });
-    }
 
-    const showNullErrors = (data: FormOutput) => {
-        for (let sector of sectors) {
-            for (let limit of limits) {
-                showNullError(data, sector, limit);
-            }
-        }
-    }
 
     const submitHandler = async (data: FormOutput) => {
         if (isFormSubmittable(data)) {
-            setSubmitData(data.form);
+            setSubmitData(data);
             return;
         }
-        showNullErrors(data);
     }
 
+    const submitFunc = (e?: React.BaseSyntheticEvent) => {
+        if (validationMode === "submitted") {
+            handleSubmit(submitHandler)(e);
+            return;
+        }
+        e?.preventDefault();
+        validationEvent.current = e;
+        setValidationMode("submitted");
+    }
+
+    useEffect(() => {
+        if (validationMode === "submitted") {
+            handleSubmit(submitHandler)(validationEvent.current);
+            return;
+        }
+    }, [validationMode])
+    
     return (
         <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(submitHandler)} noValidate>
-                <FormFields/>
+            <form onSubmit={submitFunc} noValidate>
+                <FormFields onReset={() => {setValidationMode("unsubmitted")}}/>
                 <SubmitButton action={submitAction} text={{ resetText: "Save Preset" }} />
             </form>
         </FormProvider>

@@ -1,4 +1,4 @@
-import { type ReactNode, useState, useRef, type ComponentProps} from "react";
+import { type ReactNode, useState, useRef, type ComponentPropsWithRef, type ComponentPropsWithoutRef} from "react";
 import { FloatingInput } from "./FloatingInput";
 import { useMergeRefs } from "../hooks/useMergeRefs";
 import { useClickOutside } from "../hooks/useClickOutside";
@@ -11,12 +11,24 @@ interface Item {
 
 interface Props {
     // children: ReactNode;
-    inputProps?: ComponentProps<"input">;
+    inputProps?: ComponentPropsWithRef<"input">;
+    itemProps?: Omit<ComponentPropsWithoutRef<"button">, "onClick"> 
+        & {
+            onClick: (
+                event: React.MouseEvent<HTMLButtonElement>,
+                details: {
+                    value: string,
+                    text: string,
+                    editText: string
+                }
+                
+            ) => void
+        }
     defaultItem: Item;
     items: Item[];
 }
 
-function EditableDropdown ({inputProps, defaultItem, items}: Props) {
+function EditableDropdown ({inputProps, itemProps, defaultItem, items}: Props) {
     const [value, setValue] = useState(defaultItem.value);
     const [expanded, setExpanded] = useState(false);
 
@@ -37,10 +49,14 @@ function EditableDropdown ({inputProps, defaultItem, items}: Props) {
         setExpanded((prev) => !prev)
     };
 
+    const {ref: inputPropsRef, ...remainingInputProps} = inputProps || {};
+    const {onClick: itemPropsOnClick, ...remainingItemProps} = itemProps || {};
+
     return <div className="editable-dropdown">
         <input type="text" 
-            {...inputProps}
-            ref={useMergeRefs(inputRef, inputProps?.ref)} 
+            ref={useMergeRefs(inputRef, inputPropsRef)} 
+            {...remainingInputProps}
+            
         />
         <button 
             ref={toggleRef}
@@ -56,13 +72,15 @@ function EditableDropdown ({inputProps, defaultItem, items}: Props) {
                 <button 
                     key={i}
                     type="button"
-                    onClick={() => {
+                    onClick={(e) => {
                         setExpanded(false);
                         setValue(item.value);
                         if (inputRef.current) {
                             inputRef.current.value = item.editText;
                         }
+                        itemPropsOnClick?.(e, {value: item.value, text: item.text, editText: item.editText})
                     }}
+                    {...remainingItemProps}
                 >
                     {item.text}
                 </button>
