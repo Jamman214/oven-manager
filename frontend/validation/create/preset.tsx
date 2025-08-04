@@ -33,14 +33,13 @@ const limitSchema = (mode: ValidationMode) => {
         })
         .min(minTemp, "Temperature must be ≥ " + minTemp)
         .max(maxTemp, "Temperature must be ≤ " + maxTemp)
-        .refine((val) => {console.log(val); return true},"")
+        .refine((val) => {return true},"")
         .refine(
             (val) => Number.isInteger(val),
             {message: "Must enter an integer"}
         )
     switch (mode) {
         case "submitted":
-            console.log("not nullable");
             return schema;
         case "unsubmitted":
             return schema.nullable();
@@ -97,7 +96,11 @@ const temperatureSchema = (mode: ValidationMode) => {
     )
 }
 
-const formSchema = (mode: ValidationMode) => z.object({name: nameSchema(mode), temperatures: temperatureSchema(mode)});
+const formSchema = (mode: ValidationMode) => z.object({
+    id: z.number().min(1).nullable(),
+    name: nameSchema(mode), 
+    temperatures: temperatureSchema(mode)
+});
 
 // Input to schema (null where user hasnt touched a field)
 type FormInput = z.input<ReturnType<typeof formSchema>>;
@@ -107,6 +110,7 @@ type FormOutput = z.infer<ReturnType<typeof formSchema>>;
 
 // Same as FormOutput but without nulls
 type SubmittableForm = {
+    id: number | null;
     name: string;
     temperatures: {
         core: {
@@ -128,7 +132,7 @@ const isFormSubmittable = (data: FormOutput): data is SubmittableForm => {
     }
     return true;
 }
-
+ 
 
 export {
     formSchema, 

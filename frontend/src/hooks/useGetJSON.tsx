@@ -2,16 +2,21 @@ import {useSafeFetch} from "./useSafeFetch.tsx"
 import {type DependencyList} from "react"
 import {z} from "zod"
 
-function useGetJson<T>(
+function useGetJson<T,U>(
     route: string, 
     schema: z.ZodType<T>, 
     options: {
         requirements?: () => boolean,
-        dependencies: DependencyList
+        dependencies?: DependencyList
     } = {
         dependencies: []
-    }
+    },
+    params?: Record<string, string>
 ) {
+    if (params) {
+        const urlParams = new URLSearchParams(params)
+        route = `${route}?${urlParams.toString()}`
+    }
     return useSafeFetch<T>(
         route,
         {
@@ -28,4 +33,6 @@ function useGetJson<T>(
     );
 }
 
-export {useGetJson}
+type GetJsonOutput<T> = ReturnType<typeof useGetJson<T,unknown>>
+
+export {useGetJson, type GetJsonOutput}

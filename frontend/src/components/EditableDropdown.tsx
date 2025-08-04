@@ -12,6 +12,7 @@ interface Item {
 interface Props {
     // children: ReactNode;
     inputProps?: ComponentPropsWithRef<"input">;
+    valueProps?: ComponentPropsWithRef<"input">;
     itemProps?: Omit<ComponentPropsWithoutRef<"button">, "onClick"> 
         & {
             onClick: (
@@ -28,11 +29,12 @@ interface Props {
     items: Item[];
 }
 
-function EditableDropdown ({inputProps, itemProps, defaultItem, items}: Props) {
+function EditableDropdown ({inputProps, valueProps, itemProps, defaultItem, items}: Props) {
     const [value, setValue] = useState(defaultItem.value);
     const [expanded, setExpanded] = useState(false);
 
     const inputRef = useRef<HTMLInputElement | null>(null);
+    const valueRef = useRef<HTMLInputElement | null>(null);
     const toggleRef = useRef<HTMLButtonElement | null>(null);
     const itemList = [defaultItem, ...items];
 
@@ -50,6 +52,7 @@ function EditableDropdown ({inputProps, itemProps, defaultItem, items}: Props) {
     };
 
     const {ref: inputPropsRef, ...remainingInputProps} = inputProps || {};
+    const {ref: valuePropsRef, ...remainingValueProps} = valueProps || {};
     const {onClick: itemPropsOnClick, ...remainingItemProps} = itemProps || {};
 
     return <div className="editable-dropdown">
@@ -57,6 +60,11 @@ function EditableDropdown ({inputProps, itemProps, defaultItem, items}: Props) {
             ref={useMergeRefs(inputRef, inputPropsRef)} 
             {...remainingInputProps}
             
+        />
+        <input 
+            type="hidden" 
+            ref={useMergeRefs(valueRef, valuePropsRef)}
+            {...remainingValueProps} 
         />
         <button 
             ref={toggleRef}
@@ -77,6 +85,9 @@ function EditableDropdown ({inputProps, itemProps, defaultItem, items}: Props) {
                         setValue(item.value);
                         if (inputRef.current) {
                             inputRef.current.value = item.editText;
+                        }
+                        if (valueRef.current) {
+                            valueRef.current.value = item.value;
                         }
                         itemPropsOnClick?.(e, {value: item.value, text: item.text, editText: item.editText})
                     }}

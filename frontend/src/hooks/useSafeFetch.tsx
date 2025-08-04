@@ -82,10 +82,11 @@ function useSafeFetch<T>(
     const inital: FetchState<T> = {data: null, isLoading: false, error: null}
     const [state, dispatch] = useReducer(reducer, inital);
 
-    
+    console.log("reached fetch")
     useEffect(() => {
+        console.log("1")
         if (requirements && !requirements?.()) return;
-        
+        console.log("2")
         dispatch({type: "newFetch"});
 
         const controller = new AbortController();
@@ -93,6 +94,7 @@ function useSafeFetch<T>(
 
         const runFetch = async () => {
             try {
+                console.log("ran fetch")
                 const response = await fetch(input, {...init, signal});
                 
                 if (!response.ok) {

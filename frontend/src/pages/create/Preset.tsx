@@ -5,6 +5,7 @@ import {
     useFormContext,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {z} from "zod";
 
 import ErrorAlert from "../../components/ErrorAlert.tsx";
 import {type SubmitAction, SubmitButton} from "../../components/SubmitButton.tsx";
@@ -26,7 +27,7 @@ import {
     type Limit
 } from "../../../validation/create/preset.tsx"
 
-import {useGetJson} from "../../hooks/useGetJSON.tsx";
+import {useGetJson, type GetJsonOutput} from "../../hooks/useGetJSON.tsx";
 import {usePostJson} from "../../hooks/usePostJSON.tsx";
 
 import "../../scss/pages/create/Preset.scss"
@@ -36,67 +37,98 @@ function capitalise(word: string) {
 }
 
 interface NameFieldProps {
-    onReset: () => void;
+    resetValidationMode: () => void;
 }
 
-function NameField({onReset}: NameFieldProps) {
+function usePresets() {
+    return useGetJson(
+        "/api/get/presets",
+        z.array(z.object({
+            "id": z.number(),
+            "name": z.string()
+        })),
+        {dependencies:[]}
+    )
+}
+
+function usePresetData (presetID: string) {
+    const defaultOutput = useMemo(() => 
+        [
+            {
+                "id": null,
+                "name": "",
+                "temperatures": {
+                    "core": {"high": null, "low": null}, 
+                    "oven": {"high": null, "low": null}
+                }
+            },
+            false,
+            null
+        ] as const, 
+        []
+    )
+
+    const getJsonOutput = useGetJson(
+        "/api/get/preset",
+        z.object({
+            "id": z.number(),
+            "name": z.string(),
+            "temperatures": z.object({
+                "core": z.object({
+                    "high": z.number(),
+                    "low": z.number()
+                }),
+                "oven": z.object({
+                    "high": z.number(),
+                    "low": z.number()
+                })
+            })
+        }),
+        {
+            requirements: () => presetID !== "",
+            dependencies: [presetID]
+        },
+        {id: presetID}
+    )
+
+    if (presetID === "") {
+        return defaultOutput;
+    }
+    return getJsonOutput
+}
+
+function NameField({resetValidationMode}: NameFieldProps) {
     const {
         reset,
         formState: { errors },
-        register
+        register,
+        getValues
     } = useFormContext<FormInput, unknown, FormOutput>();
 
-    const [value, setValue] = useState("");
-    const [counter, setCounter] = useState(0);
+    console.log(getValues())
 
-    const [data, isLoading, error] = useGetJson(
-        "/api/create/preset",
-        formSchema("submitted"),
-        {
-            requirements: () => value !== "",
-            dependencies: [counter]
-        }
-    )
-    
-    useEffect(() => {
-        if (value === "") {
-            reset({
-                name: "",
-                temperatures: {
-                    core: {
-                        high: null,
-                        low: null
-                    },
-                    oven: {
-                        high: null,
-                        low: null
-                    }
-                }
-            })
-        }
-    }, [counter])
+    // Fetch current preset names and ids when first mounted
+    const [presets, isPresetsLoading, presetsError] = usePresets();
 
+    // ID of preset currently bring edited
+    const [presetID, setPresetID] = useState("");
 
+    // temperatures to reset preset to
+    const [presetData, isPresetDataLoading, presetDataError] = usePresetData(presetID);
 
+    // Reset form values when a preset is selected
     const onClick = (
         e: React.MouseEvent<HTMLButtonElement, MouseEvent>, 
-        {value, editText}: {value: string, editText: string}
+        {value}: {value: string}
     ) => {
-        onReset();
-        reset({
-            name: editText,
-            temperatures: {
-                core: {
-                    high: null,
-                    low: null
-                },
-                oven: {
-                    high: null,
-                    low: null
-                }
-            }
-        })
+        resetValidationMode();
+        // setValue("id", (value==="") ? null : parseInt(value))
+        setPresetID(value);
     }
+
+    useEffect(() => {
+        presetData && reset(presetData);
+    }, [presetData])
 
     return (
         <>
@@ -106,13 +138,28 @@ function NameField({onReset}: NameFieldProps) {
             >
                 <EditableDropdown 
                     inputProps={{id:"name", placeholder:" ", ...register("name")}}
+                    valueProps={{
+                        ...register(
+                            "id", 
+                            {setValueAs: (value) => (value==="") ? null : parseInt(value)}
+                        )
+                    }}
                     itemProps={{onClick}}
                     defaultItem={{value:"", text:"new", editText:""}}
-                    items={[{value:"1", text:"item1", editText:"item1"}]}
+                    items={
+                        (presets || []).map((preset) => ({
+                            value: "" + preset.id, 
+                            text: preset.name, 
+                            editText: preset.name
+                        }))
+                    }
                 />
             </FloatingInput>
             <ErrorAlert 
                 error={errors?.name?.message}
+            />
+            <ErrorAlert 
+                error={errors?.id?.message}
             />
         </>
     );
@@ -195,43 +242,18 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
     );
 }
 
-interface FormFieldsProps {
-    onReset: () => void;
-}
-
-
-function FormFields({onReset}: FormFieldsProps) {
-    const {
-        formState: { errors },
-        register
-    } = useFormContext<FormInput, unknown, FormOutput>();
-
-    return (
-        <>
-            <fieldset>
-                <legend className="group-label">Preset</legend>
-                <NameField onReset={onReset}/>
-            </fieldset>
-            {sectors.map((sector, i) => (
-                <SectorFieldGroup
-                    key={i}
-                    sector={sector}
-                />
-            ))}
-        </>
-    );
-}
 
 function PresetCreate() {
     const [validationMode, setValidationMode] = useState<ValidationMode>("unsubmitted");
     const validationEvent = useRef<React.BaseSyntheticEvent | undefined>(undefined);
-
+    
     const { ...methods } = useForm<FormInput, unknown, FormOutput>({
         resolver: zodResolver(
             formSchema(validationMode)
         ),
         mode: "onBlur",
         defaultValues: {
+            id: null,
             name: null,
             temperatures: {
                 core: {
@@ -251,12 +273,19 @@ function PresetCreate() {
 
     const [submitData, setSubmitData] = useState<SubmittableForm | null>(null)
 
+    const submitRoute = submitData
+        ? ( 
+            (submitData.id === null)
+            ? "/api/create/preset"
+            : "/api/edit/preset"
+        )
+        : ""
 
     const [data, isLoading, error] = usePostJson(
-        "/api/create/preset",
+        submitRoute,
         submitData,
         {
-            requirements: () => submitData !== null,
+            requirements: () => (submitData !== null),
             dependencies: [submitData]
         }
     )
@@ -278,6 +307,7 @@ function PresetCreate() {
     }
 
     const submitFunc = (e?: React.BaseSyntheticEvent) => {
+        console.log(methods.getValues())
         if (validationMode === "submitted") {
             handleSubmit(submitHandler)(e);
             return;
@@ -297,7 +327,18 @@ function PresetCreate() {
     return (
         <FormProvider {...methods}>
             <form onSubmit={submitFunc} noValidate>
-                <FormFields onReset={() => {setValidationMode("unsubmitted")}}/>
+                <fieldset>
+                    <legend className="group-label">Preset</legend>
+                    <NameField 
+                        resetValidationMode={() => {setValidationMode("unsubmitted")}}
+                    />
+                </fieldset>
+                {sectors.map((sector, i) => (
+                    <SectorFieldGroup
+                        key={i}
+                        sector={sector}
+                    />
+                ))}
                 <SubmitButton action={submitAction} text={{ resetText: "Save Preset" }} />
             </form>
         </FormProvider>

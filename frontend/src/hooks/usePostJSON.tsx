@@ -11,6 +11,7 @@ function usePostJson<T>(
         dependencies: []
     }
 ) {
+    console.log("post reached")
     return useSafeFetch(
         route,
         {

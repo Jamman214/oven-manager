@@ -19,7 +19,7 @@
         pointer-events: none; 
     }
 
-    &:has(input:where(:not(:placeholder-shown), :focus)) {
+    &:has(input:where(:not(:placeholder-shown):not([type="hidden"]), :focus)) {
         label {
             padding-top: 0px;
             padding-right: 0px;

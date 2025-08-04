@@ -32,7 +32,8 @@ form {
             width: 100%;
         }
         
-        &>*:has(input):not(:last-child) {
+        &>*:has(input):not(:last-child),
+        .error:not(:last-child) {
             margin-bottom: var(--padding-sm);
         }
     }
