@@ -99,9 +99,7 @@ def create_preset():
     })
     
     valid, error_message = validate_json_request(schema, request)
-    
-    sleep(2)
-    
+        
     if not valid:
         return error_message, 400
     return "Success", 200
@@ -147,9 +145,7 @@ def edit_preset():
     })
     
     valid, error_message = validate_json_request(schema, request)
-    
-    sleep(2)
-    
+        
     if not valid:
         return error_message, 400
 
@@ -184,9 +180,7 @@ def create_schedule():
     })
     
     valid, error_message = validate_json_request(schema, request)
-    
-    sleep(2)
-    
+        
     if not valid:
         return error_message, 400
     return "Success", 200
