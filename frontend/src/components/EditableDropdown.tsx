@@ -30,7 +30,6 @@ interface Props {
 }
 
 function EditableDropdown ({inputProps, valueProps, itemProps, defaultItem, items}: Props) {
-    const [value, setValue] = useState(defaultItem.value);
     const [expanded, setExpanded] = useState(false);
 
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -82,7 +81,6 @@ function EditableDropdown ({inputProps, valueProps, itemProps, defaultItem, item
                     type="button"
                     onClick={(e) => {
                         setExpanded(false);
-                        setValue(item.value);
                         if (inputRef.current) {
                             inputRef.current.value = item.editText;
                         }
