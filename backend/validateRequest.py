@@ -29,29 +29,33 @@ class ConstraintSchema(JsonSchema):
     # Used to introduce constraints on the child
     # Should not place constraints on the children of the child
     @overload
-    def __init__(self, child: 'DictSchema', optional: bool = False, filter: Predicate[dict] = tautology) -> None:
+    def __init__(self, child: 'DictSchema', optional: bool = False, filter_fn: Predicate[dict] = tautology, error_message: str | None = None) -> None:
         ...
     
     @overload
-    def __init__(self, child: 'ListSchema', optional: bool = False, filter: Predicate[list] = tautology) -> None:
+    def __init__(self, child: 'ListSchema', optional: bool = False, filter_fn: Predicate[list] = tautology, error_message: str | None = None) -> None:
         ...
     
     @overload
-    def __init__(self, child: Type[JsonAtomic], optional: bool = False, filter: Predicate[JsonAtomic] = tautology) -> None:
+    def __init__(self, child: Type[JsonAtomic], optional: bool = False, filter_fn: Predicate[JsonAtomic] = tautology, error_message: str | None = None) -> None:
         ...
     
-    def __init__(self, child: Json = None, optional: bool = False, filter: Predicate[Any] = tautology) -> None:
+    def __init__(self, child: Json = None, optional: bool = False, filter_fn: Predicate[Any] = tautology, error_message: str | None = None) -> None:
         self.child = child
         self.optional = optional
-        self.filter = filter
+        self.filter_fn = filter_fn
+        self.error_message = error_message
 
     def validate(self, json: Any) -> ValidationResult:
         if self.optional and json is None:
             return True, ""
 
         valid, error_message = compare_json_types(self.child, json)
-        if valid and not self.filter(json):
-            return False, f"Got value: {json} which did not pass filter" 
+        if valid and not self.filter_fn(json):
+            if (self.error_message == None):
+                return False, f"Got value: {json} which did not pass filter_fn" 
+            context = {'json': json}
+            return False, self.error_message.format(**context)
         return valid, error_message
 
 
@@ -108,3 +112,23 @@ def validate_json_request(schema: ConstrainedJson,
     if not request.is_json:
         return False, "Expected JSON"
     return compare_json_types(schema, request.get_json())
+
+# Common restraints
+
+
+def expected_keys(schema: 'DictSchema') -> None:
+    # Check for keys in the input which don't appear in the schema
+    # Missing keys will be caught later
+    def check_keys_expected(json_dict: dict):
+        json_keys = json_dict.keys()
+        schema_keys = schema.schema.keys()
+        for key in json_keys:
+            if key not in schema_keys:
+                return False
+        return True
+    
+    return ConstraintSchema(
+        schema,
+        filter_fn = check_keys_expected,
+        error_message = "Got value: {json} which contained unexpected keys"
+    )

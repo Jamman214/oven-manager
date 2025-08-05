@@ -70,14 +70,14 @@ def create_preset():
     min_temp = 0
     max_temp = 500
    
-    limit_schema = ConstraintSchema(int, filter=lambda x : (x >= min_temp) and (x <= max_temp))
+    limit_schema = ConstraintSchema(int, filter_fn=lambda x : (x >= min_temp) and (x <= max_temp))
     
     sector_schema = ConstraintSchema(
         DictSchema({
             'high': limit_schema,
             'low': limit_schema
         }),
-        filter = lambda x: x['high'] > x['low']
+        filter_fn = lambda x: x['high'] > x['low']
     )
 
     temperture_schema = ConstraintSchema(
@@ -85,12 +85,12 @@ def create_preset():
             'core': sector_schema,
             'oven': sector_schema
         }),
-        filter = lambda x: x['core']['low'] >= x['oven']['high']
+        filter_fn = lambda x: x['core']['low'] >= x['oven']['high']
     )
 
     name_schema = ConstraintSchema(
         str,
-        filter = lambda x: len(x) > 0
+        filter_fn = lambda x: len(x) > 0
     )
 
     schema = DictSchema({
@@ -110,14 +110,14 @@ def edit_preset():
     min_temp = 0
     max_temp = 500
    
-    limit_schema = ConstraintSchema(int, filter=lambda x : (x >= min_temp) and (x <= max_temp))
+    limit_schema = ConstraintSchema(int, filter_fn=lambda x : (x >= min_temp) and (x <= max_temp))
     
     sector_schema = ConstraintSchema(
         DictSchema({
             'high': limit_schema,
             'low': limit_schema
         }),
-        filter = lambda x: x['high'] > x['low']
+        filter_fn = lambda x: x['high'] > x['low']
     )
 
     temperture_schema = ConstraintSchema(
@@ -125,17 +125,17 @@ def edit_preset():
             'core': sector_schema,
             'oven': sector_schema
         }),
-        filter = lambda x: x['core']['low'] >= x['oven']['high']
+        filter_fn = lambda x: x['core']['low'] >= x['oven']['high']
     )
 
     name_schema = ConstraintSchema(
         str,
-        filter = lambda x: len(x) > 0
+        filter_fn = lambda x: len(x) > 0
     )
 
     id_schema = ConstraintSchema(
         int,
-        filter = lambda x: x >= 1
+        filter_fn = lambda x: x >= 1
     )
 
     schema = DictSchema({
@@ -162,9 +162,9 @@ def edit_preset():
 def create_schedule():
     max_preset_id = 10 # Temp value before db
     
-    preset_constraint = ConstraintSchema(int, filter=lambda x : (x >= 0) and (x <= max_preset_id))
-    hour_constraint = ConstraintSchema(int, filter=lambda x : (x >= 0) and (x <= 24))
-    minute_constraint = ConstraintSchema(int, filter=lambda x : (x >= 0) and (x <= 60))
+    preset_constraint = ConstraintSchema(int, filter_fn=lambda x : (x >= 0) and (x <= max_preset_id))
+    hour_constraint = ConstraintSchema(int, filter_fn=lambda x : (x >= 0) and (x <= 24))
+    minute_constraint = ConstraintSchema(int, filter_fn=lambda x : (x >= 0) and (x <= 60))
    
     schema = DictSchema({
         "firstPreset": preset_constraint,
