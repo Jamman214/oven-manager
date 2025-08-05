@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify
-from validateRequest import validate_json_request, ConstraintSchema, DictSchema, ListSchema
+from validateRequest import validate_json_request
 from time import sleep
 from dotenv import load_dotenv
+from requestSchemas import requestSchemas
 
 app = Flask(__name__)
 load_dotenv()
@@ -49,15 +50,9 @@ def get_presets():
 @app.route("/get/preset", methods=["GET"])
 def get_preset():
     print(request.args)
-    id = request.args.get('id')
-    if not id:
-        return "expected id", 400
-    try:
-        id = int(id)
-        if id < 1:
-            return f'id must be positive', 400
-    except:
-        return f'id must be int', 400
+    id = request.args.get('id', type=int)
+    if (not id) or (id < 1):
+        return "Invalid id", 400
 
     for preset in db_presets:
         if (preset['id'] == id):
@@ -67,120 +62,31 @@ def get_preset():
 
 @app.route("/create/preset", methods=["POST"])
 def create_preset():
-    min_temp = 0
-    max_temp = 500
-   
-    limit_schema = ConstraintSchema(int, filter_fn=lambda x : (x >= min_temp) and (x <= max_temp))
-    
-    sector_schema = ConstraintSchema(
-        DictSchema({
-            'high': limit_schema,
-            'low': limit_schema
-        }),
-        filter_fn = lambda x: x['high'] > x['low']
-    )
-
-    temperture_schema = ConstraintSchema(
-        DictSchema({
-            'core': sector_schema,
-            'oven': sector_schema
-        }),
-        filter_fn = lambda x: x['core']['low'] >= x['oven']['high']
-    )
-
-    name_schema = ConstraintSchema(
-        str,
-        filter_fn = lambda x: len(x) > 0
-    )
-
-    schema = DictSchema({
-        'name': name_schema,
-        'temperatures': temperture_schema
-    })
-    
-    valid, error_message = validate_json_request(schema, request)
-        
-    if not valid:
+    preset, error_message = validate_json_request(requestSchemas.preset.create, request)
+    if preset is None:
         return error_message, 400
+
+    db_presets.append(preset)
+
     return "Success", 200
 
 
 @app.route("/edit/preset", methods=["POST"])
 def edit_preset():
-    min_temp = 0
-    max_temp = 500
-   
-    limit_schema = ConstraintSchema(int, filter_fn=lambda x : (x >= min_temp) and (x <= max_temp))
-    
-    sector_schema = ConstraintSchema(
-        DictSchema({
-            'high': limit_schema,
-            'low': limit_schema
-        }),
-        filter_fn = lambda x: x['high'] > x['low']
-    )
-
-    temperture_schema = ConstraintSchema(
-        DictSchema({
-            'core': sector_schema,
-            'oven': sector_schema
-        }),
-        filter_fn = lambda x: x['core']['low'] >= x['oven']['high']
-    )
-
-    name_schema = ConstraintSchema(
-        str,
-        filter_fn = lambda x: len(x) > 0
-    )
-
-    id_schema = ConstraintSchema(
-        int,
-        filter_fn = lambda x: x >= 1
-    )
-
-    schema = DictSchema({
-        'id': id_schema,
-        'name': name_schema,
-        'temperatures': temperture_schema
-    })
-    
-    valid, error_message = validate_json_request(schema, request)
-        
-    if not valid:
+    preset, error_message = validate_json_request(requestSchemas.preset.edit, request)
+    if preset is None:
         return error_message, 400
-
-    newPreset = request.get_json()
     
-    for i, preset in enumerate(db_presets):
-        if (preset['id'] == newPreset['id']):
-            db_presets[i] = newPreset # Need to ensure this doesnt contain additional fields
+    for i, existing_preset in enumerate(db_presets):
+        if (existing_preset['id'] == preset['id']):
+            db_presets[i] = preset # Need to ensure this doesnt contain additional fields
             return "Success", 200
     return f'preset {id} does not exist', 404
 
 
 @app.route("/create/schedule", methods=["POST"])
-def create_schedule():
-    max_preset_id = 10 # Temp value before db
-    
-    preset_constraint = ConstraintSchema(int, filter_fn=lambda x : (x >= 0) and (x <= max_preset_id))
-    hour_constraint = ConstraintSchema(int, filter_fn=lambda x : (x >= 0) and (x <= 24))
-    minute_constraint = ConstraintSchema(int, filter_fn=lambda x : (x >= 0) and (x <= 60))
-   
-    schema = DictSchema({
-        "firstPreset": preset_constraint,
-        "followingPresets":ListSchema(
-            DictSchema({
-                "preset": preset_constraint,
-                "time": DictSchema({
-                    "hour": hour_constraint,
-                    "minute": minute_constraint
-                })
-            })
-        )
-    })
-    
-    valid, error_message = validate_json_request(schema, request)
-        
-    if not valid:
+def create_schedule():    
+    schedule, error_message = validate_json_request(requestSchemas.schedule.create, request)
+    if schedule is None:
         return error_message, 400
     return "Success", 200
