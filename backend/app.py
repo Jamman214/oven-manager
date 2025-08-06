@@ -66,6 +66,10 @@ def create_preset():
     if preset is None:
         return error_message, 400
 
+    max_id = 0
+    for existing_preset in db_presets:
+        max_id = max(max_id, existing_preset['id'])
+    preset['id'] = max_id + 1
     db_presets.append(preset)
 
     return "Success", 200

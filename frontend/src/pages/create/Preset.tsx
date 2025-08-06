@@ -29,6 +29,7 @@ import {
 
 import {useGetJson, type GetJsonOutput} from "../../hooks/useGetJSON.tsx";
 import {usePostJson} from "../../hooks/usePostJSON.tsx";
+import {useUpdateWhenEqual} from "../../hooks/useUpdateWhenEqual.tsx"
 
 import "../../scss/pages/create/Preset.scss"
 
@@ -38,20 +39,21 @@ function capitalise(word: string) {
 
 interface NameFieldProps {
     resetValidationMode: () => void;
+    modified: boolean;
 }
 
-function usePresets() {
+function usePresets(modifiedCount: number) {
     return useGetJson(
         "/api/get/presets",
         z.array(z.object({
             "id": z.number(),
             "name": z.string()
         })),
-        {dependencies:[]}
+        {dependencies:[modifiedCount]}
     )
 }
 
-function usePresetData (presetID: string) {
+function usePresetData (presetID: string, dependencies: unknown[]) {
     const defaultOutput = useMemo(() => 
         [
             {
@@ -86,7 +88,7 @@ function usePresetData (presetID: string) {
         }),
         {
             requirements: () => presetID !== "",
-            dependencies: [presetID]
+            dependencies: [presetID, ...dependencies]
         },
         {id: presetID}
     )
@@ -97,7 +99,7 @@ function usePresetData (presetID: string) {
     return getJsonOutput
 }
 
-function NameField({resetValidationMode}: NameFieldProps) {
+function NameField({resetValidationMode, modified}: NameFieldProps) {
     const {
         reset,
         formState: { errors },
@@ -105,16 +107,19 @@ function NameField({resetValidationMode}: NameFieldProps) {
         getValues
     } = useFormContext<FormInput, unknown, FormOutput>();
 
-    console.log(getValues())
+    // Triggers for reset after submitting new preset
+    // Also triggers the names of all presets and the data for the current preset to be refetched
+    // This is a bit inefficient and could be made more performant in the future
+    const modifiedCount = useUpdateWhenEqual(modified, true);
 
     // Fetch current preset names and ids when first mounted
-    const [presets, isPresetsLoading, presetsError] = usePresets();
+    const [presets, isPresetsLoading, presetsError] = usePresets(modifiedCount);
 
     // ID of preset currently bring edited
     const [presetID, setPresetID] = useState("");
 
     // temperatures to reset preset to
-    const [presetData, isPresetDataLoading, presetDataError] = usePresetData(presetID);
+    const [presetData, isPresetDataLoading, presetDataError] = usePresetData(presetID, [modifiedCount]);
 
     // Reset form values when a preset is selected
     const onClick = (
@@ -122,13 +127,14 @@ function NameField({resetValidationMode}: NameFieldProps) {
         {value}: {value: string}
     ) => {
         resetValidationMode();
-        // setValue("id", (value==="") ? null : parseInt(value))
-        setPresetID(value);
+        if (value === presetID) presetData && reset(presetData);
+        else setPresetID(value);
     }
 
     useEffect(() => {
-        presetData && reset(presetData);
-    }, [presetData])
+        if (presetID === "") presetData && reset(presetData);
+        presetData && reset(presetData); // Resets form once loaded
+    }, [presetData, modifiedCount])
 
     return (
         <>
@@ -283,7 +289,14 @@ function PresetCreate() {
 
     const [data, isLoading, error] = usePostJson(
         submitRoute,
-        submitData,
+        submitData && (
+            submitData.id !== null 
+                ? submitData 
+                : {
+                    name: submitData.name,
+                    temperatures: submitData.temperatures
+                }
+        ),
         {
             requirements: () => (submitData !== null),
             dependencies: [submitData]
@@ -331,6 +344,7 @@ function PresetCreate() {
                     <legend className="group-label">Preset</legend>
                     <NameField 
                         resetValidationMode={() => {setValidationMode("unsubmitted")}}
+                        modified={submitAction==="SUCCEED"}
                     />
                 </fieldset>
                 {sectors.map((sector, i) => (
