@@ -33,6 +33,4 @@ function useGetJson<T,U>(
     );
 }
 
-type GetJsonOutput<T> = ReturnType<typeof useGetJson<T,unknown>>
-
-export {useGetJson, type GetJsonOutput}
+export {useGetJson}

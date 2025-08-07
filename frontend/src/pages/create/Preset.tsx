@@ -15,19 +15,20 @@ import {EditableDropdown} from "../../components/EditableDropdown.tsx";
 
 
 import {
-    formSchema, 
-    isFormSubmittable, 
-    type FormInput, 
-    type FormOutput, 
-    type SubmittableForm, 
-    type ValidationMode,
+    formSchemas, 
+    initialFormValues,
     sectors, 
-    type Sector, 
     limits, 
-    type Limit
+    
+    type FormSchemaInput, 
+    type FormSchemaOutput, 
+    type SubmittableFormData,
+    type ValidationMode,
+    type Sector, 
+    type Limit  
 } from "../../../validation/create/preset.tsx"
 
-import {useGetJson, type GetJsonOutput} from "../../hooks/useGetJSON.tsx";
+import {useGetJson} from "../../hooks/useGetJSON.tsx";
 import {usePostJson} from "../../hooks/usePostJSON.tsx";
 import {useUpdateWhenEqual} from "../../hooks/useUpdateWhenEqual.tsx"
 
@@ -39,7 +40,7 @@ function capitalise(word: string) {
 
 interface NameFieldProps {
     resetValidationMode: () => void;
-    modified: boolean;
+    modifiedCount: number;
 }
 
 function usePresets(modifiedCount: number) {
@@ -56,14 +57,7 @@ function usePresets(modifiedCount: number) {
 function usePresetData (presetID: string, dependencies: unknown[]) {
     const defaultOutput = useMemo(() => 
         [
-            {
-                "id": null,
-                "name": "",
-                "temperatures": {
-                    "core": {"high": null, "low": null}, 
-                    "oven": {"high": null, "low": null}
-                }
-            },
+            initialFormValues,
             false,
             null
         ] as const, 
@@ -72,20 +66,7 @@ function usePresetData (presetID: string, dependencies: unknown[]) {
 
     const getJsonOutput = useGetJson(
         "/api/get/preset",
-        z.object({
-            "id": z.number(),
-            "name": z.string(),
-            "temperatures": z.object({
-                "core": z.object({
-                    "high": z.number(),
-                    "low": z.number()
-                }),
-                "oven": z.object({
-                    "high": z.number(),
-                    "low": z.number()
-                })
-            })
-        }),
+        formSchemas.received,
         {
             requirements: () => presetID !== "",
             dependencies: [presetID, ...dependencies]
@@ -99,18 +80,13 @@ function usePresetData (presetID: string, dependencies: unknown[]) {
     return getJsonOutput
 }
 
-function NameField({resetValidationMode, modified}: NameFieldProps) {
+function NameField({resetValidationMode, modifiedCount}: NameFieldProps) {
     const {
         reset,
         formState: { errors },
         register,
         getValues
-    } = useFormContext<FormInput, unknown, FormOutput>();
-
-    // Triggers for reset after submitting new preset
-    // Also triggers the names of all presets and the data for the current preset to be refetched
-    // This is a bit inefficient and could be made more performant in the future
-    const modifiedCount = useUpdateWhenEqual(modified, true);
+    } = useFormContext<FormSchemaInput, unknown, FormSchemaOutput>();
 
     // Fetch current preset names and ids when first mounted
     const [presets, isPresetsLoading, presetsError] = usePresets(modifiedCount);
@@ -134,7 +110,7 @@ function NameField({resetValidationMode, modified}: NameFieldProps) {
     useEffect(() => {
         if (presetID === "") presetData && reset(presetData);
         presetData && reset(presetData); // Resets form once loaded
-    }, [presetData, modifiedCount])
+    }, [presetData])
 
     return (
         <>
@@ -182,21 +158,21 @@ function TemperatureField({
         trigger,
         register,
         formState: { errors },
-    } = useFormContext<FormInput, unknown, FormOutput>();
+    } = useFormContext<FormSchemaInput, unknown, FormSchemaOutput>();
 
-    const path = `temperatures.${sector}.${limit}` as const;
+    const path = `temperature.${sector}.${limit}` as const;
 
     const isInvalid = Boolean(
-        errors.temperatures?.[sector]?.[limit]?.message
-        || errors.temperatures?.[sector]?.message
-        || errors.temperatures?.message
+        errors.temperature?.[sector]?.[limit]?.message
+        || errors.temperature?.[sector]?.message
+        || errors.temperature?.message
     )
 
-    const fieldError = errors.temperatures?.[sector]?.[limit];
+    const fieldError = errors.temperature?.[sector]?.[limit];
 
 
     const onBlur = async () => {
-        await trigger("temperatures")
+        await trigger("temperature")
     };
     
     return <>
@@ -220,9 +196,9 @@ function TemperatureField({
 function SectorFieldGroup({sector,}: {sector: Sector;}) {
     const {
         formState: { errors },
-    } = useFormContext<FormInput, unknown, FormOutput>();
+    } = useFormContext<FormSchemaInput, unknown, FormSchemaOutput>();
 
-    const fieldError = errors.temperatures?.[sector];
+    const fieldError = errors.temperature?.[sector];
 
     return (
         <fieldset>
@@ -241,7 +217,7 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
             {
                 sector === 'oven' &&
                 <ErrorAlert 
-                    error={errors?.temperatures?.message}
+                    error={errors?.temperature?.message}
                 />
             }
         </fieldset>
@@ -252,32 +228,18 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
 function PresetCreate() {
     const [validationMode, setValidationMode] = useState<ValidationMode>("unsubmitted");
     const validationEvent = useRef<React.BaseSyntheticEvent | undefined>(undefined);
-    
-    const { ...methods } = useForm<FormInput, unknown, FormOutput>({
+    console.log(validationMode);
+    const { ...methods } = useForm<FormSchemaInput, unknown, FormSchemaOutput>({
         resolver: zodResolver(
-            formSchema(validationMode)
+            formSchemas[validationMode]
         ),
         mode: "onBlur",
-        defaultValues: {
-            id: null,
-            name: null,
-            temperatures: {
-                core: {
-                    high: null,
-                    low: null
-                },
-                oven: {
-                    high: null,
-                    low: null
-                }
-            }
-        },
-    }
-    );
+        defaultValues: initialFormValues,
+    });
 
-    const { handleSubmit, setError, setValue } = methods;
+    const { handleSubmit, setError, setValue, reset } = methods;
 
-    const [submitData, setSubmitData] = useState<SubmittableForm | null>(null)
+    const [submitData, setSubmitData] = useState<SubmittableFormData | null>(null)
 
     const submitRoute = submitData
         ? ( 
@@ -294,7 +256,7 @@ function PresetCreate() {
                 ? submitData 
                 : {
                     name: submitData.name,
-                    temperatures: submitData.temperatures
+                    temperature: submitData.temperature
                 }
         ),
         {
@@ -310,27 +272,37 @@ function PresetCreate() {
         : "RESET"
     )
 
+    const modifiedCount = useUpdateWhenEqual(submitAction, "SUCCEED") // Save or edit
 
-
-    const submitHandler = async (data: FormOutput) => {
-        if (isFormSubmittable(data)) {
-            setSubmitData(data);
-            return;
+    useEffect(() => {
+        if (submitData && submitData.id === null) {
+            const activeElement = document.activeElement
+            if (activeElement instanceof HTMLInputElement) {
+                activeElement.blur()
+            }
+            setValidationMode("unsubmitted");
+            reset(initialFormValues)
         }
+    }, [modifiedCount])
+
+    const submitHandler = async (data: FormSchemaOutput) => {
+        // Only called if passes validation on submitted mode
+        setSubmitData(data as SubmittableFormData);
     }
 
     const submitFunc = (e?: React.BaseSyntheticEvent) => {
-        console.log(methods.getValues())
         if (validationMode === "submitted") {
             handleSubmit(submitHandler)(e);
             return;
+        } else {
+            setValidationMode("submitted");
         }
         e?.preventDefault();
         validationEvent.current = e;
-        setValidationMode("submitted");
     }
 
     useEffect(() => {
+        // Can't handle the submit until a rerender has updated the zodresolver
         if (validationMode === "submitted") {
             handleSubmit(submitHandler)(validationEvent.current);
             return;
@@ -343,8 +315,8 @@ function PresetCreate() {
                 <fieldset>
                     <legend className="group-label">Preset</legend>
                     <NameField 
-                        resetValidationMode={() => {setValidationMode("unsubmitted")}}
-                        modified={submitAction==="SUCCEED"}
+                        resetValidationMode={() => {setValidationMode("unsubmitted"); console.log("reset mode")}}
+                        modifiedCount={modifiedCount}
                     />
                 </fieldset>
                 {sectors.map((sector, i) => (
