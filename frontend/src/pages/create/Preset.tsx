@@ -12,8 +12,6 @@ import {type SubmitAction, SubmitButton} from "../../components/SubmitButton.tsx
 import {FloatingInput} from "../../components/FloatingInput.tsx";
 import {EditableDropdown} from "../../components/EditableDropdown.tsx";
 
-
-
 import {
     formSchemas, 
     initialFormValues,
@@ -34,17 +32,18 @@ import {useUpdateWhenEqual} from "../../hooks/useUpdateWhenEqual.tsx"
 
 import "../../scss/pages/create/Preset.scss"
 
-function capitalise(word: string) {
-    return word.charAt(0).toUpperCase() + word.slice(1);
-}
+// ------------------------------------------------------------
+// Name
+// ------------------------------------------------------------
 
 interface NameFieldProps {
     resetValidationMode: () => void;
     modifiedCount: number;
 }
 
+// Fetches the list of presets whenever a preset is saved/edited
 function usePresets(modifiedCount: number) {
-    return useGetJson(
+    const [presets, isPresetsLoading, presetsError] = useGetJson(
         "/api/get/presets",
         z.array(z.object({
             "id": z.number(),
@@ -52,32 +51,30 @@ function usePresets(modifiedCount: number) {
         })),
         {dependencies:[modifiedCount]}
     )
+    return useMemo(
+        () => presets || [],
+        [presets]
+    )
 }
 
-function usePresetData (presetID: string, dependencies: unknown[]) {
-    const defaultOutput = useMemo(() => 
-        [
-            initialFormValues,
-            false,
-            null
-        ] as const, 
-        []
-    )
-
-    const getJsonOutput = useGetJson(
+// Fetches the values for the current preset whenever a new preset is selected, 
+// or when a preset is saved/edited
+function usePresetData (presetID: string, modifiedCount: number) {
+    const [presetData, isPresetDataLoading, presetDataError] = useGetJson(
         "/api/get/preset",
         formSchemas.received,
         {
             requirements: () => presetID !== "",
-            dependencies: [presetID, ...dependencies]
+            dependencies: [presetID, modifiedCount]
         },
         {id: presetID}
     )
 
     if (presetID === "") {
-        return defaultOutput;
+        return initialFormValues;
     }
-    return getJsonOutput
+    // Will default to new if not loading
+    return presetData || initialFormValues 
 }
 
 function NameField({resetValidationMode, modifiedCount}: NameFieldProps) {
@@ -85,17 +82,16 @@ function NameField({resetValidationMode, modifiedCount}: NameFieldProps) {
         reset,
         formState: { errors },
         register,
-        getValues
     } = useFormContext<FormSchemaInput, unknown, FormSchemaOutput>();
 
-    // Fetch current preset names and ids when first mounted
-    const [presets, isPresetsLoading, presetsError] = usePresets(modifiedCount);
+    // list of available presets
+    const presets = usePresets(modifiedCount);
 
-    // ID of preset currently bring edited
+    // ID of current preset
     const [presetID, setPresetID] = useState("");
 
-    // temperatures to reset preset to
-    const [presetData, isPresetDataLoading, presetDataError] = usePresetData(presetID, [modifiedCount]);
+    // default values for current preset
+    const presetData = usePresetData(presetID, modifiedCount);
 
     // Reset form values when a preset is selected
     const onClick = (
@@ -103,8 +99,11 @@ function NameField({resetValidationMode, modifiedCount}: NameFieldProps) {
         {value}: {value: string}
     ) => {
         resetValidationMode();
-        if (value === presetID) presetData && reset(presetData);
-        else setPresetID(value);
+        if (value === presetID) {
+            reset(presetData);
+        } else {
+            setPresetID(value);
+        }
     }
 
     useEffect(() => {
@@ -129,7 +128,7 @@ function NameField({resetValidationMode, modifiedCount}: NameFieldProps) {
                     itemProps={{onClick}}
                     defaultItem={{value:"", text:"new", editText:""}}
                     items={
-                        (presets || []).map((preset) => ({
+                        (presets).map((preset) => ({
                             value: "" + preset.id, 
                             text: preset.name, 
                             editText: preset.name
@@ -147,6 +146,10 @@ function NameField({resetValidationMode, modifiedCount}: NameFieldProps) {
     );
 }
 
+// ------------------------------------------------------------
+// Temperatures
+// ------------------------------------------------------------
+
 function TemperatureField({
     sector,
     limit,
@@ -162,14 +165,7 @@ function TemperatureField({
 
     const path = `temperature.${sector}.${limit}` as const;
 
-    const isInvalid = Boolean(
-        errors.temperature?.[sector]?.[limit]?.message
-        || errors.temperature?.[sector]?.message
-        || errors.temperature?.message
-    )
-
     const fieldError = errors.temperature?.[sector]?.[limit];
-
 
     const onBlur = async () => {
         await trigger("temperature")
@@ -193,6 +189,11 @@ function TemperatureField({
     </>;
 }
 
+
+function capitalise(word: string) {
+    return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
 function SectorFieldGroup({sector,}: {sector: Sector;}) {
     const {
         formState: { errors },
@@ -204,7 +205,6 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
         <fieldset>
             <legend className="group-label">{capitalise(sector)} Temperature</legend>
             {limits.map((limit, i) => (
-                
                     <TemperatureField
                         sector={sector}
                         limit={limit}
@@ -224,11 +224,14 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
     );
 }
 
+// ------------------------------------------------------------
+// Rest of the form
+// ------------------------------------------------------------
 
 function PresetCreate() {
     const [validationMode, setValidationMode] = useState<ValidationMode>("unsubmitted");
     const validationEvent = useRef<React.BaseSyntheticEvent | undefined>(undefined);
-    console.log(validationMode);
+    
     const { ...methods } = useForm<FormSchemaInput, unknown, FormSchemaOutput>({
         resolver: zodResolver(
             formSchemas[validationMode]
@@ -237,7 +240,7 @@ function PresetCreate() {
         defaultValues: initialFormValues,
     });
 
-    const { handleSubmit, setError, setValue, reset } = methods;
+    const { handleSubmit, reset } = methods;
 
     const [submitData, setSubmitData] = useState<SubmittableFormData | null>(null)
 
@@ -275,6 +278,7 @@ function PresetCreate() {
     const modifiedCount = useUpdateWhenEqual(submitAction, "SUCCEED") // Save or edit
 
     useEffect(() => {
+        // Blurs selected input and resets form when submitting new schema
         if (submitData && submitData.id === null) {
             const activeElement = document.activeElement
             if (activeElement instanceof HTMLInputElement) {
@@ -286,19 +290,19 @@ function PresetCreate() {
     }, [modifiedCount])
 
     const submitHandler = async (data: FormSchemaOutput) => {
-        // Only called if passes validation on submitted mode
+        // Only reached when validationMode = "submitted"
         setSubmitData(data as SubmittableFormData);
     }
 
     const submitFunc = (e?: React.BaseSyntheticEvent) => {
+        e?.preventDefault();
+        validationEvent.current = e;
         if (validationMode === "submitted") {
             handleSubmit(submitHandler)(e);
             return;
         } else {
             setValidationMode("submitted");
         }
-        e?.preventDefault();
-        validationEvent.current = e;
     }
 
     useEffect(() => {
@@ -315,7 +319,7 @@ function PresetCreate() {
                 <fieldset>
                     <legend className="group-label">Preset</legend>
                     <NameField 
-                        resetValidationMode={() => {setValidationMode("unsubmitted"); console.log("reset mode")}}
+                        resetValidationMode={() => {setValidationMode("unsubmitted")}}
                         modifiedCount={modifiedCount}
                     />
                 </fieldset>
