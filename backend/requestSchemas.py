@@ -19,7 +19,7 @@ class PresetSchemas():
         filter_fn = lambda x: x['high'] > x['low']
     )
 
-    _temperatures = ConstraintSchema(
+    _temperature = ConstraintSchema(
         expected_keys(DictSchema({
             'core': _sector,
             'oven': _sector
@@ -39,13 +39,13 @@ class PresetSchemas():
 
     create = expected_keys(DictSchema({
         'name': _name,
-        'temperatures': _temperatures
+        'temperature': _temperature
     }))
 
     edit = expected_keys(DictSchema({
         'id': _id,
         'name': _name,
-        'temperatures': _temperatures
+        'temperature': _temperature
     }))
 
 class ScheduleSchemas():

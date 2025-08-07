@@ -12,7 +12,7 @@ db_presets = [
     {
         'id': 1,
         'name': "preset1",
-        'temperatures': {
+        'temperature': {
             'core': {
                 'high': 150,
                 'low': 140
@@ -26,7 +26,7 @@ db_presets = [
     {
         'id': 2,
         'name': "preset2",
-        'temperatures': {
+        'temperature': {
             'core': {
                 'high': 310,
                 'low': 270
