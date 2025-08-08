@@ -194,18 +194,17 @@ function PresetCreate() {
 
     const { handleSubmit, reset, watch, setValue } = methods;
 
-
     const submitAction = useSubmitData(submitData)
-    const modifiedCount = useUpdateWhenEqual(submitAction, "SUCCEED") // Save or edit
+    const editedOrSavedCount = useUpdateWhenEqual(submitAction, "SUCCEED") // Save or edit
 
     // ID of current preset
     const _presetID = watch("id");
     const presetID = _presetID === null ? "" : "" + _presetID;
 
-    const presetData = usePresetData(presetID, modifiedCount);
+    const presetData = usePresetData(presetID, editedOrSavedCount);
 
     // Reset form values when a preset is selected
-    const onClick = (
+    const nameSelectHandler = (
         e: React.MouseEvent<HTMLButtonElement, MouseEvent>, 
         {value}: {value: string}
     ) => {
@@ -231,7 +230,7 @@ function PresetCreate() {
             setValidationMode("unsubmitted");
             reset(initialFormValues)
         }
-    }, [modifiedCount])
+    }, [editedOrSavedCount])
 
     // ------------------------------------------------------------
     // Form submission
@@ -271,8 +270,8 @@ function PresetCreate() {
                     <legend className="group-label">Preset</legend>
                     <EditableNameDropdown 
                         namesRoute="/api/get/presets"
-                        modifiedCount={modifiedCount}
-                        onClick={onClick}
+                        refreshOnChange={editedOrSavedCount}
+                        selectHandler={nameSelectHandler}
                     />
                 </fieldset>
                 {sectors.map((sector, i) => (

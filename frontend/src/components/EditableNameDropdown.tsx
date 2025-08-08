@@ -29,11 +29,11 @@ function usePresets(route: string, modifiedCount: number) {
 
 interface Props {
     namesRoute: string;
-    modifiedCount: number;
-    onClick: ClickHandler;
+    refreshOnChange: number;
+    selectHandler: ClickHandler;
 }
 
-function EditableNameDropdown({ modifiedCount, namesRoute, onClick }: Props) {
+function EditableNameDropdown({ refreshOnChange, namesRoute, selectHandler }: Props) {
     const {
         reset,
         formState: { errors },
@@ -41,7 +41,7 @@ function EditableNameDropdown({ modifiedCount, namesRoute, onClick }: Props) {
     } = useFormContext<{id: number, name: string}>();
 
     // list of available presets
-    const presets = usePresets(namesRoute, modifiedCount);
+    const presets = usePresets(namesRoute, refreshOnChange);
 
     return (
         <>
@@ -57,7 +57,7 @@ function EditableNameDropdown({ modifiedCount, namesRoute, onClick }: Props) {
                             {setValueAs: (value) => (value==="") ? null : parseInt(value)}
                         )
                     }}
-                    itemProps={{onClick}}
+                    itemProps={{onClick: selectHandler}}
                     defaultItem={{value:"", text:"new", editText:""}}
                     items={
                         (presets).map((preset) => ({
