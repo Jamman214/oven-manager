@@ -15,7 +15,6 @@ function useClickOutside<T extends HTMLElement>(callback: (() => void) | ((event
 
         return () => {
             removeEventListener("mouseup", handleClickOutside);
-            console.log("removed");
         }
     }, [callback, active])
 
