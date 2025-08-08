@@ -11,6 +11,8 @@ import ErrorAlert from "../../components/ErrorAlert.tsx";
 import {type SubmitAction, SubmitButton} from "../../components/SubmitButton.tsx";
 import {FloatingInput} from "../../components/FloatingInput.tsx";
 import {EditableDropdown} from "../../components/EditableDropdown.tsx";
+import {EditableNameDropdown, type ClickHandler} from "../../components/EditableNameDropdown.tsx";
+
 
 import {
     formSchemas, 
@@ -31,120 +33,6 @@ import {usePostJson} from "../../hooks/usePostJSON.tsx";
 import {useUpdateWhenEqual} from "../../hooks/useUpdateWhenEqual.tsx"
 
 import "../../scss/pages/create/Preset.scss"
-
-// ------------------------------------------------------------
-// Name
-// ------------------------------------------------------------
-
-interface NameFieldProps {
-    resetValidationMode: () => void;
-    modifiedCount: number;
-}
-
-// Fetches the list of presets whenever a preset is saved/edited
-function usePresets(modifiedCount: number) {
-    const [presets, isPresetsLoading, presetsError] = useGetJson(
-        "/api/get/presets",
-        z.array(z.object({
-            "id": z.number(),
-            "name": z.string()
-        })),
-        {dependencies:[modifiedCount]}
-    )
-    return useMemo(
-        () => presets || [],
-        [presets]
-    )
-}
-
-// Fetches the values for the current preset whenever a new preset is selected, 
-// or when a preset is saved/edited
-function usePresetData (presetID: string, modifiedCount: number) {
-    const [presetData, isPresetDataLoading, presetDataError] = useGetJson(
-        "/api/get/preset",
-        formSchemas.received,
-        {
-            requirements: () => presetID !== "",
-            dependencies: [presetID, modifiedCount]
-        },
-        {id: presetID}
-    )
-
-    if (presetID === "") {
-        return initialFormValues;
-    }
-    // Will default to new if not loading
-    return presetData || initialFormValues 
-}
-
-function NameField({resetValidationMode, modifiedCount}: NameFieldProps) {
-    const {
-        reset,
-        formState: { errors },
-        register,
-    } = useFormContext<FormSchemaInput, unknown, FormSchemaOutput>();
-
-    // list of available presets
-    const presets = usePresets(modifiedCount);
-
-    // ID of current preset
-    const [presetID, setPresetID] = useState("");
-
-    // default values for current preset
-    const presetData = usePresetData(presetID, modifiedCount);
-
-    // Reset form values when a preset is selected
-    const onClick = (
-        e: React.MouseEvent<HTMLButtonElement, MouseEvent>, 
-        {value}: {value: string}
-    ) => {
-        resetValidationMode();
-        if (value === presetID) {
-            reset(presetData);
-        } else {
-            setPresetID(value);
-        }
-    }
-
-    useEffect(() => {
-        if (presetID === "") presetData && reset(presetData);
-        presetData && reset(presetData); // Resets form once loaded
-    }, [presetData])
-
-    return (
-        <>
-            <FloatingInput
-                text="Name"
-                htmlFor="name"
-            >
-                <EditableDropdown 
-                    inputProps={{id:"name", placeholder:" ", ...register("name")}}
-                    valueProps={{
-                        ...register(
-                            "id", 
-                            {setValueAs: (value) => (value==="") ? null : parseInt(value)}
-                        )
-                    }}
-                    itemProps={{onClick}}
-                    defaultItem={{value:"", text:"new", editText:""}}
-                    items={
-                        (presets).map((preset) => ({
-                            value: "" + preset.id, 
-                            text: preset.name, 
-                            editText: preset.name
-                        }))
-                    }
-                />
-            </FloatingInput>
-            <ErrorAlert 
-                error={errors?.name?.message}
-            />
-            <ErrorAlert 
-                error={errors?.id?.message}
-            />
-        </>
-    );
-}
 
 // ------------------------------------------------------------
 // Temperatures
@@ -228,29 +116,41 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
 // Rest of the form
 // ------------------------------------------------------------
 
-function PresetCreate() {
-    const [validationMode, setValidationMode] = useState<ValidationMode>("unsubmitted");
-    const validationEvent = useRef<React.BaseSyntheticEvent | undefined>(undefined);
-    
-    const { ...methods } = useForm<FormSchemaInput, unknown, FormSchemaOutput>({
-        resolver: zodResolver(
-            formSchemas[validationMode]
-        ),
-        mode: "onBlur",
-        defaultValues: initialFormValues,
-    });
+// ------------------------------------------------------------
+// Name
+// ------------------------------------------------------------
 
-    const { handleSubmit, reset } = methods;
+function usePresetData (presetID: string, modifiedCount: number) {
+    const [_presetData, isPresetDataLoading, presetDataError] = useGetJson(
+        "/api/get/preset",
+        formSchemas.received,
+        {
+            requirements: () => presetID !== "",
+            dependencies: [presetID, modifiedCount]
+        },
+        {id: presetID}
+    )
 
-    const [submitData, setSubmitData] = useState<SubmittableFormData | null>(null)
+    const [presetData, setPresetData] = useState<
+        z.infer<typeof formSchemas.received>
+        | typeof initialFormValues
+    >(initialFormValues)
 
+    useEffect(() => {
+        if (isPresetDataLoading || presetDataError) return;
+        setPresetData(_presetData || initialFormValues)
+    }, [_presetData])
+
+    return presetData;
+}
+
+function useSubmitData (submitData: SubmittableFormData | null) {
     const submitRoute = submitData
         ? ( 
             (submitData.id === null)
             ? "/api/create/preset"
             : "/api/edit/preset"
-        )
-        : ""
+        ) : ""
 
     const [data, isLoading, error] = usePostJson(
         submitRoute,
@@ -268,14 +168,58 @@ function PresetCreate() {
         }
     )
 
-    const submitAction: SubmitAction = (
+    return (
         isLoading ? "SUBMIT"
         : data ? "SUCCEED"
         : error ? "FAIL"
         : "RESET"
     )
+}
 
+
+
+function PresetCreate() {
+    const [validationMode, setValidationMode] = useState<ValidationMode>("unsubmitted");
+    const [submitData, setSubmitData] = useState<SubmittableFormData | null>(null)
+
+    const validationEvent = useRef<React.BaseSyntheticEvent | undefined>(undefined);
+    
+    const { ...methods } = useForm<FormSchemaInput, unknown, FormSchemaOutput>({
+        resolver: zodResolver(
+            formSchemas[validationMode]
+        ),
+        mode: "onBlur",
+        defaultValues: initialFormValues,
+    });
+
+    const { handleSubmit, reset, watch, setValue } = methods;
+
+
+    const submitAction = useSubmitData(submitData)
     const modifiedCount = useUpdateWhenEqual(submitAction, "SUCCEED") // Save or edit
+
+    // ID of current preset
+    const _presetID = watch("id");
+    const presetID = _presetID === null ? "" : "" + _presetID;
+
+    const presetData = usePresetData(presetID, modifiedCount);
+
+    // Reset form values when a preset is selected
+    const onClick = (
+        e: React.MouseEvent<HTMLButtonElement, MouseEvent>, 
+        {value}: {value: string}
+    ) => {
+        setValidationMode("unsubmitted");
+        if (value === presetID) {
+            reset(presetData);
+        } else {
+            setValue("id", value === "" ? null : parseInt(value));
+        }
+    }
+
+    useEffect(() => {
+        reset(presetData); // Resets form once loaded
+    }, [presetData])
 
     useEffect(() => {
         // Blurs selected input and resets form when submitting new schema
@@ -289,6 +233,10 @@ function PresetCreate() {
         }
     }, [modifiedCount])
 
+    // ------------------------------------------------------------
+    // Form submission
+    // ------------------------------------------------------------
+
     const submitHandler = async (data: FormSchemaOutput) => {
         // Only reached when validationMode = "submitted"
         setSubmitData(data as SubmittableFormData);
@@ -296,13 +244,12 @@ function PresetCreate() {
 
     const submitFunc = (e?: React.BaseSyntheticEvent) => {
         e?.preventDefault();
-        validationEvent.current = e;
         if (validationMode === "submitted") {
             handleSubmit(submitHandler)(e);
             return;
-        } else {
-            setValidationMode("submitted");
         }
+        validationEvent.current = e;
+        setValidationMode("submitted");
     }
 
     useEffect(() => {
@@ -313,14 +260,19 @@ function PresetCreate() {
         }
     }, [validationMode])
     
+    // ------------------------------------------------------------
+    // JSX
+    // ------------------------------------------------------------
+
     return (
         <FormProvider {...methods}>
             <form onSubmit={submitFunc} noValidate>
                 <fieldset>
                     <legend className="group-label">Preset</legend>
-                    <NameField 
-                        resetValidationMode={() => {setValidationMode("unsubmitted")}}
+                    <EditableNameDropdown 
+                        namesRoute="/api/get/presets"
                         modifiedCount={modifiedCount}
+                        onClick={onClick}
                     />
                 </fieldset>
                 {sectors.map((sector, i) => (

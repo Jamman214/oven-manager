@@ -9,22 +9,22 @@ interface Item {
     editText: string;
 }
 
+type ClickHandler = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    details: {
+        value: string,
+        text: string,
+        editText: string
+    }
+    
+) => void
+
 interface Props {
     // children: ReactNode;
     inputProps?: ComponentPropsWithRef<"input">;
     valueProps?: ComponentPropsWithRef<"input">;
     itemProps?: Omit<ComponentPropsWithoutRef<"button">, "onClick"> 
-        & {
-            onClick: (
-                event: React.MouseEvent<HTMLButtonElement>,
-                details: {
-                    value: string,
-                    text: string,
-                    editText: string
-                }
-                
-            ) => void
-        }
+        & { onClick: ClickHandler }
     defaultItem: Item;
     items: Item[];
 }
@@ -98,4 +98,4 @@ function EditableDropdown ({inputProps, valueProps, itemProps, defaultItem, item
     </div>
 }
 
-export {EditableDropdown};
+export {EditableDropdown, type ClickHandler};
