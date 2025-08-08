@@ -94,7 +94,7 @@ function SubmitButton({ action = "RESET", text = {}, ...buttonProps }: SubmitBut
 
 
     return (
-        <button type="submit" className="testButton" disabled={disabled} {...buttonProps}>
+        <button type="submit" className="formButton" disabled={disabled} {...buttonProps}>
             {buttonText}
         </button>
     );

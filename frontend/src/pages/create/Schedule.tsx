@@ -17,6 +17,8 @@ import {useGetJson} from "../../hooks/useGetJSON.tsx";
 
 import { formSchema, type FormInput, type FormOutput}  from "../../../validation/create/schedule.tsx"
 
+import "../../scss/pages/create/Schedule.scss"
+
 interface TimeProps {
     index: number
 }
@@ -195,6 +197,7 @@ function PresetSchedule() {
             <form onSubmit={handleSubmitWrapper} noValidate>
                     <FormFields {...{timeFields, presetFields}}/>
                         <button
+                            className="formButton"
                             type="button"
                             onClick={remove}
                         >
@@ -202,6 +205,7 @@ function PresetSchedule() {
                         </button>
                         <SubmitButton action={submitAction} text={{ resetText: "Save Schedule" }} />
                         <button
+                            className="formButton"
                             type="button"
                             onClick={append}
                         >
