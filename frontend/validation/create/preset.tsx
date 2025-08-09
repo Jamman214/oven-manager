@@ -17,137 +17,113 @@ type ValidationMode = (typeof validationModes)[number];
 // Schema for limit
 // ------------------------------------------------------------
 
-const buildLimitSchemas = () => {
-    const minTemp = 0
-    const maxTemp = 500
+const CreateLimitSchemaSet = () => {
+    const tempRange = {min: 0, max: 500}
     const strictSchema = z
-        .number({
-            invalid_type_error: "Must enter a number",
-        })
-        .min(minTemp, "Temperature must be ≥ " + minTemp)
-        .max(maxTemp, "Temperature must be ≤ " + maxTemp)
-        .refine((val) => {return true},"")
+        .number({invalid_type_error: "Must enter a number"})
+        .min(tempRange.min, `Temperature must be ≥ ${tempRange.min}`)
+        .max(tempRange.max, `Temperature must be ≤ ${tempRange.max}`)
         .refine(
             (val) => Number.isInteger(val),
             {message: "Must enter an integer"}
         );
-    const relaxedSchema = strictSchema.nullable();
     return {
         submitted: strictSchema,
-        unsubmitted: relaxedSchema,
+        unsubmitted: strictSchema.nullable(),
         received: strictSchema
     }
 }
-const limitSchemas = buildLimitSchemas()
+const limitSchemas = CreateLimitSchemaSet()
 
 // ------------------------------------------------------------
 // Schema for sector
 // ------------------------------------------------------------
 
-const buildSectorSchemas = () => {
-    const buildSchema = <S extends z.ZodType,>(limitSchema: S) => z
+
+const createSectorSchema = <K extends ValidationMode>(key: K) => {
+    const limitSchema = limitSchemas[key]
+    const baseSchema = z
         .object({
             high: limitSchema,
             low: limitSchema,
-        }).pipe(
-            z.any().superRefine((data, ctx) => {
-                if (
-                    data.high != null 
-                    && data.low != null 
-                    && data.high < data.low
-                ) {
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        message: "High cannot be colder than low",
-                        path: [],
-                    });
-                }
-            })
-        );
+        })
 
-    return {
-        submitted: buildSchema(limitSchemas.submitted),
-        unsubmitted: buildSchema(limitSchemas.unsubmitted),
-        received: buildSchema(limitSchemas.received)
-    }
+    return baseSchema.pipe(
+        baseSchema.superRefine((data, ctx) => {
+            if (
+                typeof data.high === "number"
+                && typeof data.low === "number"
+                && data.high < data.low
+            ) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "High cannot be colder than low",
+                    path: [],
+                });
+            }
+        })
+    );
 }
 
-const sectorSchemas = buildSectorSchemas()
+const sectorSchemas = {
+    submitted: createSectorSchema("submitted"),
+    unsubmitted: createSectorSchema("unsubmitted"),
+    received: createSectorSchema("received"),
+};
 
 // ------------------------------------------------------------
 // Schema for temperature
 // ------------------------------------------------------------
 
-const buildTemperatureSchema = () => {
-    const buildSchema = <S extends z.ZodType,>(sectorSchema: S) => z
-        .object({
-            core: sectorSchema,
-            oven: sectorSchema
-        }).pipe(
-            z.any().superRefine((data, ctx) => {
-                if (
-                    data.oven.high != null 
-                    && data.core.low != null 
-                    && data.oven.high > data.core.low
+const createTemperatureSchema = <K extends ValidationMode>(key: K) => {
+    const baseSchema = z.object({
+        core: sectorSchemas[key],
+        oven: sectorSchemas[key]
+    })
+    
+    return baseSchema.pipe(
+        baseSchema.superRefine((data, ctx) => {
+        if (
+            typeof data.core?.low === "number"
+            && typeof data.oven?.high === "number"
+            && data.oven.high > data.core.low
 
-                ) {
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        message: "Core must be hotter than oven",
-                        path: [],
-                    });
-                }
-            })
-        );
-    return {
-        submitted: buildSchema(sectorSchemas.submitted),
-        unsubmitted: buildSchema(sectorSchemas.unsubmitted),
-        received: buildSchema(sectorSchemas.received)
-    }
+        ) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Core must be hotter than oven",
+                path: [],
+            });
+            }
+        })
+    );
 }
 
-const temperatureSchemas = buildTemperatureSchema();
+const temperatureSchemas = {
+    submitted: createTemperatureSchema("submitted"),
+    unsubmitted: createTemperatureSchema("unsubmitted"),
+    received: createTemperatureSchema("received"),
+};
+
+type X<K extends ValidationMode> = typeof createTemperatureSchema<K>
 
 // ------------------------------------------------------------
 // Schema for form
 // ------------------------------------------------------------
 
-const buildFormSchemas = () => {
-    const buildSchema = <
-        ID extends z.ZodType,
-        N extends z.ZodType,
-        T extends z.ZodType,
-    >(
-        idSchema: ID, 
-        nameSchema: N, 
-        temperatureSchema: T
-    ) => z
-        .object({
-            id: idSchema,
-            name: nameSchema, 
-            temperature: temperatureSchema
-        });
-
-    return {
-        submitted: buildSchema(
-            idSchemas.submitted, 
-            nameSchemas.submitted, 
-            temperatureSchemas.submitted
-        ),
-        unsubmitted: buildSchema(
-            idSchemas.unsubmitted, 
-            nameSchemas.unsubmitted, 
-            temperatureSchemas.unsubmitted
-        ),
-        received: buildSchema(
-            idSchemas.received, 
-            nameSchemas.received, 
-            temperatureSchemas.received
-        )
-    }
+const createFormSchema = <K extends ValidationMode>(key: K) => {
+    return z.object({
+        id: idSchemas[key],
+        name: nameSchemas[key], 
+        temperature: temperatureSchemas[key]
+    });
 }
 
-const formSchemas = buildFormSchemas();
+const formSchemas = {
+    submitted: createFormSchema("submitted"),
+    unsubmitted: createFormSchema("unsubmitted"),
+    received: createFormSchema("received"),
+};
 
 // ------------------------------------------------------------
 // Values and types
