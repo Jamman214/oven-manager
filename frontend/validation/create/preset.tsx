@@ -1,5 +1,5 @@
 import { z } from "zod";
-
+import {idSchemas, nameSchemas} from "./name.tsx"
 // ------------------------------------------------------------
 // Important constants
 // ------------------------------------------------------------
@@ -12,41 +12,6 @@ type Limit = (typeof limits)[number];
 
 const validationModes = ["submitted", "unsubmitted", "received"] as const;
 type ValidationMode = (typeof validationModes)[number];
-
-// ------------------------------------------------------------
-// Schema for id
-// ------------------------------------------------------------
-
-const buildIdSchemas = () => {
-    const receiveSchema = z.number().min(1);
-    const sendSchema = receiveSchema.nullable();
-    return {
-        submitted: sendSchema,
-        unsubmitted: sendSchema,
-        received: receiveSchema
-    }
-}
-
-const idSchemas = buildIdSchemas();
-
-// ------------------------------------------------------------
-// Schema for name
-// ------------------------------------------------------------
-
-const buildNameSchemas = () => {
-    const strictSchema = z
-        .string({
-            invalid_type_error: "Must enter a name",
-        })
-        .min(1, "Must enter a name");
-    const relaxedSchema = strictSchema.nullable();
-    return {
-        submitted: strictSchema,
-        unsubmitted: relaxedSchema,
-        received: strictSchema
-    }
-}
-const nameSchemas = buildNameSchemas()
 
 // ------------------------------------------------------------
 // Schema for limit
@@ -85,10 +50,7 @@ const buildSectorSchemas = () => {
             high: limitSchema,
             low: limitSchema,
         }).pipe(
-            z.object({
-                high: z.number().nullable(),
-                low: z.number().nullable()
-            }).superRefine((data, ctx) => {
+            z.any().superRefine((data, ctx) => {
                 if (
                     data.high != null 
                     && data.low != null 
@@ -122,10 +84,7 @@ const buildTemperatureSchema = () => {
             core: sectorSchema,
             oven: sectorSchema
         }).pipe(
-            z.object({
-                core: z.object({high: z.number().nullable(), low: z.number().nullable()}),
-                oven: z.object({high: z.number().nullable(), low: z.number().nullable()})
-            }).superRefine((data, ctx) => {
+            z.any().superRefine((data, ctx) => {
                 if (
                     data.oven.high != null 
                     && data.core.low != null 
