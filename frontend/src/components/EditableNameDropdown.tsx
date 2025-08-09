@@ -38,6 +38,7 @@ function EditableNameDropdown({ refreshOnChange, namesRoute, selectHandler }: Pr
         reset,
         formState: { errors },
         register,
+        setValue
     } = useFormContext<{id: number, name: string}>();
 
     // list of available presets
@@ -52,10 +53,12 @@ function EditableNameDropdown({ refreshOnChange, namesRoute, selectHandler }: Pr
                 <EditableDropdown 
                     inputProps={{id:"name", placeholder:" ", ...register("name")}}
                     valueProps={{
-                        ...register(
-                            "id", 
-                            {setValueAs: (value) => (value==="") ? null : parseInt(value)}
-                        )
+                        // ...register(
+                        //     "id", 
+                        //     {setValueAs: (value) => (value==="") ? null : parseInt(value)}
+                        // )
+                        // Doesnt trigger react-hook-form so no point
+
                     }}
                     itemProps={{onClick: selectHandler}}
                     defaultItem={{value:"", text:"new", editText:""}}

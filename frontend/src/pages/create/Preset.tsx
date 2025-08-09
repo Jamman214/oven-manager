@@ -3,6 +3,7 @@ import {
     useForm,
     FormProvider,
     useFormContext,
+    type Path
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {z} from "zod";
@@ -33,6 +34,7 @@ import {usePostJson} from "../../hooks/usePostJSON.tsx";
 import {useUpdateWhenEqual} from "../../hooks/useUpdateWhenEqual.tsx"
 
 import "../../scss/pages/create/Preset.scss"
+import { validDataA } from "@hookform/resolvers/ajv/src/__tests__/__fixtures__/data-errors.js";
 
 // ------------------------------------------------------------
 // Temperatures
@@ -116,19 +118,16 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
 // Rest of the form
 // ------------------------------------------------------------
 
-// ------------------------------------------------------------
-// Name
-// ------------------------------------------------------------
-
-function usePresetData (presetID: string, modifiedCount: number) {
+function usePresetData (presetID: number | null, modifiedCount: number) {
+    const urlPresetID = presetID === null ? "" : "" + presetID
     const [_presetData, isPresetDataLoading, presetDataError] = useGetJson(
         "/api/get/preset",
         formSchemas.received,
         {
-            requirements: () => presetID !== "",
+            requirements: () => presetID !== null,
             dependencies: [presetID, modifiedCount]
         },
-        {id: presetID}
+        {id: urlPresetID}
     )
 
     const [presetData, setPresetData] = useState<
@@ -138,8 +137,8 @@ function usePresetData (presetID: string, modifiedCount: number) {
 
     useEffect(() => {
         if (isPresetDataLoading || presetDataError) return;
-        setPresetData(_presetData || initialFormValues)
-    }, [_presetData])
+        setPresetData(presetID === null ? initialFormValues : _presetData || initialFormValues)
+    }, [_presetData, presetID])
 
     return presetData;
 }
@@ -181,8 +180,6 @@ function useSubmitData (submitData: SubmittableFormData | null) {
 function PresetCreate() {
     const [validationMode, setValidationMode] = useState<ValidationMode>("unsubmitted");
     const [submitData, setSubmitData] = useState<SubmittableFormData | null>(null)
-
-    const validationEvent = useRef<React.BaseSyntheticEvent | undefined>(undefined);
     
     const { ...methods } = useForm<FormSchemaInput, unknown, FormSchemaOutput>({
         resolver: zodResolver(
@@ -192,14 +189,13 @@ function PresetCreate() {
         defaultValues: initialFormValues,
     });
 
-    const { handleSubmit, reset, watch, setValue } = methods;
+    const { reset, watch, setValue, getValues, setError } = methods;
 
     const submitAction = useSubmitData(submitData)
     const editedOrSavedCount = useUpdateWhenEqual(submitAction, "SUCCEED") // Save or edit
 
     // ID of current preset
-    const _presetID = watch("id");
-    const presetID = _presetID === null ? "" : "" + _presetID;
+    const presetID = watch("id");
 
     const presetData = usePresetData(presetID, editedOrSavedCount);
 
@@ -208,16 +204,18 @@ function PresetCreate() {
         e: React.MouseEvent<HTMLButtonElement, MouseEvent>, 
         {value}: {value: string}
     ) => {
+        const newPresetID = value === "" ? null : parseInt(value)
         setValidationMode("unsubmitted");
-        if (value === presetID) {
+        if (newPresetID === presetID) {
             reset(presetData);
         } else {
-            setValue("id", value === "" ? null : parseInt(value));
+            setValue("id", newPresetID);
         }
     }
 
     useEffect(() => {
-        reset(presetData); // Resets form once loaded
+        // Resets form once loaded
+        reset(presetData);
     }, [presetData])
 
     useEffect(() => {
@@ -235,30 +233,28 @@ function PresetCreate() {
     // ------------------------------------------------------------
     // Form submission
     // ------------------------------------------------------------
-
-    const submitHandler = async (data: FormSchemaOutput) => {
-        // Only reached when validationMode = "submitted"
-        setSubmitData(data as SubmittableFormData);
-    }
-
-    const submitFunc = (e?: React.BaseSyntheticEvent) => {
-        e?.preventDefault();
-        if (validationMode === "submitted") {
-            handleSubmit(submitHandler)(e);
-            return;
-        }
-        validationEvent.current = e;
-        setValidationMode("submitted");
-    }
-
-    useEffect(() => {
-        // Can't handle the submit until a rerender has updated the zodresolver
-        if (validationMode === "submitted") {
-            handleSubmit(submitHandler)(validationEvent.current);
-            return;
-        }
-    }, [validationMode])
     
+    const submitFunc = (
+        e?: React.BaseSyntheticEvent
+    ) => {
+        e?.preventDefault();
+
+        const data = getValues();
+        const result = formSchemas.submitted.safeParse(data);
+        if (result.success) {
+            setSubmitData(result.data);
+        } else {
+            for (const issue of result.error.issues) {
+                const path = issue.path.join(".") as Path<FormSchemaInput>;
+                setError(path, {
+                    type: "manual",
+                    message: issue.message,
+                });
+            }
+        }
+        setValidationMode("submitted")
+    }
+
     // ------------------------------------------------------------
     // JSX
     // ------------------------------------------------------------
