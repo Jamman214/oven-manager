@@ -1,5 +1,8 @@
 import {z} from "zod"
 
+const validationModes = ["submitted", "unsubmitted", "received"] as const;
+type ValidationMode = (typeof validationModes)[number];
+
 // ------------------------------------------------------------
 // Schema for id
 // ------------------------------------------------------------
@@ -35,4 +38,4 @@ const buildNameSchemas = () => {
 }
 const nameSchemas = buildNameSchemas()
 
-export {idSchemas, nameSchemas}
+export {idSchemas, nameSchemas, type ValidationMode}

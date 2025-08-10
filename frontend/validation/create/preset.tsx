@@ -1,5 +1,5 @@
 import { z } from "zod";
-import {idSchemas, nameSchemas} from "./name.tsx"
+import {idSchemas, nameSchemas, type ValidationMode} from "./name.tsx"
 // ------------------------------------------------------------
 // Important constants
 // ------------------------------------------------------------
@@ -9,9 +9,6 @@ type Sector = (typeof sectors)[number];
 
 const limits = ["high", "low"] as const;
 type Limit = (typeof limits)[number];
-
-const validationModes = ["submitted", "unsubmitted", "received"] as const;
-type ValidationMode = (typeof validationModes)[number];
 
 // ------------------------------------------------------------
 // Schema for limit
