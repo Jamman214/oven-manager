@@ -14,6 +14,7 @@ type Limit = (typeof limits)[number];
 // Schema for limit
 // ------------------------------------------------------------
 
+const simpleLimitSchema = z.number().nullable()
 const createLimitSchemas = () => {
     const tempRange = {min: 0, max: 500}
     const strictSchema = z
@@ -36,6 +37,7 @@ const limitSchemas = createLimitSchemas()
 // Schema for sector
 // ------------------------------------------------------------
 
+const simpleSectorSchema = z.object({high: simpleLimitSchema, low: simpleLimitSchema})
 const createSectorSchema = <K extends ValidationMode>(key: K) => {
     const baseSchema = z
         .object({
@@ -44,7 +46,7 @@ const createSectorSchema = <K extends ValidationMode>(key: K) => {
         })
 
     return baseSchema.pipe(
-        baseSchema.superRefine((data, ctx) => {
+        simpleSectorSchema.superRefine((data, ctx) => {
             if (
                 typeof data.high === "number"
                 && typeof data.low === "number"
@@ -70,6 +72,7 @@ const sectorSchemas = {
 // Schema for temperature
 // ------------------------------------------------------------
 
+const simpleTemperatureSchema = z.object({core: simpleSectorSchema, oven: simpleSectorSchema})
 const createTemperatureSchema = <K extends ValidationMode>(key: K) => {
     const baseSchema = z.object({
         core: sectorSchemas[key],
@@ -77,7 +80,7 @@ const createTemperatureSchema = <K extends ValidationMode>(key: K) => {
     })
     
     return baseSchema.pipe(
-        baseSchema.superRefine((data, ctx) => {
+        simpleTemperatureSchema.superRefine((data, ctx) => {
         if (
             typeof data.core?.low === "number"
             && typeof data.oven?.high === "number"
@@ -136,7 +139,7 @@ const initialFormValues = {
             low: null
         }
     }
-} as const
+}
 
 type FormSchemaInput = z.input<typeof formSchemas.submitted> | z.input<typeof formSchemas.unsubmitted>;
 type FormSchemaOutput = z.infer<typeof formSchemas.submitted> | z.infer<typeof formSchemas.unsubmitted>

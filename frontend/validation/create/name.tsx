@@ -7,6 +7,7 @@ type ValidationMode = (typeof validationModes)[number];
 // Schema for id
 // ------------------------------------------------------------
 
+const simpleIdSchema = z.number().nullable()
 const buildIdSchemas = () => {
     const receiveSchema = z.number().min(1);
     const sendSchema = receiveSchema.nullable();
@@ -14,7 +15,7 @@ const buildIdSchemas = () => {
         submitted: sendSchema,
         unsubmitted: sendSchema,
         received: receiveSchema
-    }
+    } as const
 }
 
 const idSchemas = buildIdSchemas();
@@ -23,6 +24,7 @@ const idSchemas = buildIdSchemas();
 // Schema for name
 // ------------------------------------------------------------
 
+const simpleNameSchema = z.string().nullable()
 const buildNameSchemas = () => {
     const strictSchema = z
         .string({
@@ -34,8 +36,8 @@ const buildNameSchemas = () => {
         submitted: strictSchema,
         unsubmitted: relaxedSchema,
         received: strictSchema
-    }
+    } as const
 }
 const nameSchemas = buildNameSchemas()
 
-export {idSchemas, nameSchemas, type ValidationMode}
+export {idSchemas, simpleIdSchema, nameSchemas, simpleNameSchema, type ValidationMode}
