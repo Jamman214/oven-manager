@@ -31,7 +31,7 @@ const CreateLimitSchemaSet = () => {
         submitted: strictSchema,
         unsubmitted: strictSchema.nullable(),
         received: strictSchema
-    }
+    } as const
 }
 const limitSchemas = CreateLimitSchemaSet()
 
@@ -39,13 +39,11 @@ const limitSchemas = CreateLimitSchemaSet()
 // Schema for sector
 // ------------------------------------------------------------
 
-
 const createSectorSchema = <K extends ValidationMode>(key: K) => {
-    const limitSchema = limitSchemas[key]
     const baseSchema = z
         .object({
-            high: limitSchema,
-            low: limitSchema,
+            high: limitSchemas[key],
+            low: limitSchemas[key],
         })
 
     return baseSchema.pipe(
@@ -69,7 +67,7 @@ const sectorSchemas = {
     submitted: createSectorSchema("submitted"),
     unsubmitted: createSectorSchema("unsubmitted"),
     received: createSectorSchema("received"),
-};
+} as const;
 
 // ------------------------------------------------------------
 // Schema for temperature
@@ -103,9 +101,8 @@ const temperatureSchemas = {
     submitted: createTemperatureSchema("submitted"),
     unsubmitted: createTemperatureSchema("unsubmitted"),
     received: createTemperatureSchema("received"),
-};
+} as const;
 
-type X<K extends ValidationMode> = typeof createTemperatureSchema<K>
 
 // ------------------------------------------------------------
 // Schema for form
@@ -123,7 +120,7 @@ const formSchemas = {
     submitted: createFormSchema("submitted"),
     unsubmitted: createFormSchema("unsubmitted"),
     received: createFormSchema("received"),
-};
+} as const;
 
 // ------------------------------------------------------------
 // Values and types
@@ -142,10 +139,10 @@ const initialFormValues = {
             low: null
         }
     }
-}
+} as const
 
-type FormSchemaInput = z.input<typeof formSchemas.submitted | typeof formSchemas.unsubmitted>;
-type FormSchemaOutput = z.infer<typeof formSchemas.submitted | typeof formSchemas.unsubmitted>
+type FormSchemaInput = z.input<typeof formSchemas.submitted> | z.input<typeof formSchemas.unsubmitted>;
+type FormSchemaOutput = z.infer<typeof formSchemas.submitted> | z.infer<typeof formSchemas.unsubmitted>
 type SubmittableFormData = z.infer<typeof formSchemas.submitted>;
 
 export {
