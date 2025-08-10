@@ -2,7 +2,7 @@ import {useSafeFetch} from "./useSafeFetch.tsx"
 import {type DependencyList} from "react"
 import {z} from "zod"
 
-function useGetJson<T,U>(
+function useGetJson<T>(
     route: string, 
     schema: z.ZodType<T>, 
     options: {
