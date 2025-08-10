@@ -17,7 +17,7 @@ type ValidationMode = (typeof validationModes)[number];
 // Schema for limit
 // ------------------------------------------------------------
 
-const CreateLimitSchemaSet = () => {
+const createLimitSchemas = () => {
     const tempRange = {min: 0, max: 500}
     const strictSchema = z
         .number({invalid_type_error: "Must enter a number"})
@@ -33,7 +33,7 @@ const CreateLimitSchemaSet = () => {
         received: strictSchema
     } as const
 }
-const limitSchemas = CreateLimitSchemaSet()
+const limitSchemas = createLimitSchemas()
 
 // ------------------------------------------------------------
 // Schema for sector
