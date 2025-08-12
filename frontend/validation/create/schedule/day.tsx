@@ -1,13 +1,11 @@
 import {z} from "zod"
-import {idSchemas, simpleIdSchema, nameSchemas, simpleNameSchema, type ValidationMode} from "../name.tsx"
-
-
-type InitialFormValues = {
-    id: number | null,
-    name: string | null,
-    time: (string | null)[],
-    preset: string[]
-}
+import { 
+    idSchemas, 
+    simpleIdSchema, 
+    nameSchemas, 
+    simpleNameSchema, 
+    type ValidationMode
+} from "../name.tsx"
 
 const wrapObject = <S extends z.ZodType>(schema: S) => 
     z.object({value: schema})
@@ -208,5 +206,3 @@ export {
     type SubmittableFormData,
     type ValidationMode
 };
-
-// type X = z.input<typeof formSchemas.received>

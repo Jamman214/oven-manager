@@ -1,5 +1,4 @@
-import { type ReactNode, useState, useRef, type ComponentPropsWithRef, type ComponentPropsWithoutRef} from "react";
-import { FloatingInput } from "./FloatingInput";
+import { useState, useRef, type ComponentPropsWithRef, type ComponentPropsWithoutRef } from "react";
 import { useMergeRefs } from "../hooks/useMergeRefs";
 import { useClickOutside } from "../hooks/useClickOutside";
 

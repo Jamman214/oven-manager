@@ -1,5 +1,9 @@
 import { z } from "zod";
-import {idSchemas, nameSchemas, type ValidationMode} from "./name.tsx"
+import { 
+    idSchemas, 
+    nameSchemas, 
+    type ValidationMode
+} from "./name.tsx"
 // ------------------------------------------------------------
 // Important constants
 // ------------------------------------------------------------

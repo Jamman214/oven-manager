@@ -1,14 +1,11 @@
-import {z} from "zod";
-import {useGetJson} from "../hooks/useGetJSON";
-import {useState, useMemo, useEffect} from "react"
-import ErrorAlert from "../components/ErrorAlert.tsx";
-import {FloatingInput} from "../components/FloatingInput.tsx";
-import {EditableDropdown, type ClickHandler} from "../components/EditableDropdown.tsx";
-import {
-    useFormContext,
-    type FieldValues,
-    type Path
-} from "react-hook-form";
+import { useGetJson } from "../hooks/useGetJSON";
+import { useMemo } from "react"
+import { ErrorAlert } from "../components/ErrorAlert.tsx";
+import { FloatingInput} from "../components/FloatingInput.tsx";
+import { EditableDropdown, type ClickHandler } from "../components/EditableDropdown.tsx";
+import { useFormContext } from "react-hook-form";
+
+import { z } from "zod";
 
 
 // Fetches the list of names + ids whenever a preset is saved/edited

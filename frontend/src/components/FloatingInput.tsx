@@ -1,4 +1,4 @@
-import {type ComponentProps, type ReactNode} from "react";
+import { type ComponentProps, type ReactNode } from "react";
 
 interface Props extends ComponentProps<"label"> {
     text: string;

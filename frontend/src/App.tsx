@@ -1,11 +1,12 @@
-import NavBar from "./components/NavBar";
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import NavBar from "./components/NavBar";
 import HomePage from "./pages/Home";
 import ConfigPage from "./pages/Config";
 import HistoryPage from "./pages/History";
 import CreatePreset from "./pages/create/CreatePreset";
 import CreateScheduleDay from "./pages/create/schedule/CreateScheduleDay";
-import { useEffect } from "react";
+
 
 import "./scss/App.scss";
 

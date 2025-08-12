@@ -1,6 +1,3 @@
-import { type ComponentProps } from "react";
-
-
 interface Props {
     error: string|undefined;
 }
@@ -13,4 +10,4 @@ function ErrorAlert({error}: Props) {
     return <div className="error">{error}</div>;
 }
 
-export default ErrorAlert
+export {ErrorAlert}

@@ -1,5 +1,6 @@
-import {useSafeFetch} from "./useSafeFetch.tsx"
-import {type DependencyList} from "react"
+import { useSafeFetch } from "./useSafeFetch.tsx"
+import { type DependencyList } from "react"
+
 import {z} from "zod"
 
 function useGetJson<T>(

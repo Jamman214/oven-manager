@@ -1,4 +1,4 @@
-import {useState, useRef, useMemo, useEffect} from "react"
+import { useState, useEffect } from "react"
 import {
     useForm,
     FormProvider,
@@ -8,12 +8,14 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import {z} from "zod";
 
-import ErrorAlert from "../../components/ErrorAlert.tsx";
-import {type SubmitAction, SubmitButton} from "../../components/SubmitButton.tsx";
-import {FloatingInput} from "../../components/FloatingInput.tsx";
-import {EditableDropdown} from "../../components/EditableDropdown.tsx";
-import {EditableNameDropdown, type ClickHandler} from "../../components/EditableNameDropdown.tsx";
+import {useGetJson} from "../../hooks/useGetJSON.tsx";
+import {usePostJson} from "../../hooks/usePostJSON.tsx";
+import {useUpdateWhenEqual} from "../../hooks/useUpdateWhenEqual.tsx"
 
+import { ErrorAlert } from "../../components/ErrorAlert.tsx";
+import { SubmitButton } from "../../components/SubmitButton.tsx";
+import { FloatingInput } from "../../components/FloatingInput.tsx";
+import { EditableNameDropdown } from "../../components/EditableNameDropdown.tsx";
 
 import {
     formSchemas, 
@@ -29,12 +31,7 @@ import {
     type Limit  
 } from "../../../validation/create/preset.tsx"
 
-import {useGetJson} from "../../hooks/useGetJSON.tsx";
-import {usePostJson} from "../../hooks/usePostJSON.tsx";
-import {useUpdateWhenEqual} from "../../hooks/useUpdateWhenEqual.tsx"
-
 import "../../scss/pages/create/CreatePreset.scss"
-import { validDataA } from "@hookform/resolvers/ajv/src/__tests__/__fixtures__/data-errors.js";
 
 // ------------------------------------------------------------
 // Temperatures

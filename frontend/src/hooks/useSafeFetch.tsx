@@ -1,4 +1,4 @@
-import {useEffect, useReducer, type DependencyList} from "react"
+import { useEffect, useReducer, type DependencyList } from "react"
 
 type FetchInit = RequestInit
 type ResponseHandler<T> = ((response: Response) => Promise<T>) | ((response: Response) => T);

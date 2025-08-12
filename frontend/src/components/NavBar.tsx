@@ -1,8 +1,8 @@
-import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useClickOutside } from "../hooks/useClickOutside.tsx"
+import { NavLink, useLocation } from "react-router-dom";
 import { MenuBurger } from "./MenuBurger.tsx";
 import { breakpoint_sm } from "../utility/breakpoints.tsx"
-import { useClickOutside } from "../hooks/useClickOutside.tsx"
 
 import "../scss/components/NavBar.scss"
 

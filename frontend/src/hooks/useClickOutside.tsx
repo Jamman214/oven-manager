@@ -1,4 +1,4 @@
-import {useEffect, useRef} from "react";
+import { useEffect, useRef } from "react";
 
 function useClickOutside<T extends HTMLElement>(callback: (() => void) | ((event: MouseEvent) => void), active: boolean) {
     const ref = useRef<T>(null);
