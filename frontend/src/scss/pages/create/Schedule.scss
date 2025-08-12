@@ -28,7 +28,7 @@ form {
             margin-top: var(--padding-md);
         }
 
-        .floating-input, .error {
+        select, input, .error {
             width: 100%;
         }
         
@@ -39,6 +39,16 @@ form {
     }
 
     button[type="submit"] {
+        margin-top: 0px;
+        margin-bottom: 0px;
+    }
+
+    .formButtons {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-content: center;
         margin-top: var(--padding-md);
         margin-bottom: var(--padding-lg);
     }
