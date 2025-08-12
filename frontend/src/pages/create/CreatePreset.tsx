@@ -33,7 +33,7 @@ import {useGetJson} from "../../hooks/useGetJSON.tsx";
 import {usePostJson} from "../../hooks/usePostJSON.tsx";
 import {useUpdateWhenEqual} from "../../hooks/useUpdateWhenEqual.tsx"
 
-import "../../scss/pages/create/Preset.scss"
+import "../../scss/pages/create/CreatePreset.scss"
 import { validDataA } from "@hookform/resolvers/ajv/src/__tests__/__fixtures__/data-errors.js";
 
 // ------------------------------------------------------------
@@ -177,7 +177,7 @@ function useSubmitData (submitData: SubmittableFormData | null) {
 
 
 
-function PresetCreate() {
+function CreatePreset() {
     const [validationMode, setValidationMode] = useState<ValidationMode>("unsubmitted");
     const [submitData, setSubmitData] = useState<SubmittableFormData | null>(null)
     
@@ -282,4 +282,4 @@ function PresetCreate() {
     );
 }
 
-export default PresetCreate;
+export default CreatePreset;

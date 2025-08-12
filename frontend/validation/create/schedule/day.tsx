@@ -1,5 +1,5 @@
 import {z} from "zod"
-import {idSchemas, simpleIdSchema, nameSchemas, simpleNameSchema, type ValidationMode} from "./name.tsx"
+import {idSchemas, simpleIdSchema, nameSchemas, simpleNameSchema, type ValidationMode} from "../name.tsx"
 
 
 type InitialFormValues = {

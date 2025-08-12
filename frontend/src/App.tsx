@@ -3,8 +3,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/Home";
 import ConfigPage from "./pages/Config";
 import HistoryPage from "./pages/History";
-import PresetCreate from "./pages/create/Preset";
-import PresetSchedule from "./pages/create/Schedule";
+import CreatePreset from "./pages/create/CreatePreset";
+import CreateScheduleDay from "./pages/create/schedule/CreateScheduleDay";
 import { useEffect } from "react";
 
 import "./scss/App.scss";
@@ -24,7 +24,7 @@ function App() {
                         header: { text: "Create", link: "/create"},
                         subitems: [
                             { text: "Preset", link: "/create/preset" },
-                            { text: "Schedule", link: "/create/schedule" },
+                            { text: "Day Schedule", link: "/create/schedule/day" },
                         ],
                     },
                     { text: "History", link: "/history" },
@@ -33,8 +33,8 @@ function App() {
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/config" element={<ConfigPage />} />
-                <Route path="/create/preset" element={<PresetCreate />} />
-                <Route path="/create/schedule" element={<PresetSchedule />} />
+                <Route path="/create/preset" element={<CreatePreset />} />
+                <Route path="/create/schedule/day" element={<CreateScheduleDay />} />
                 <Route path="/history" element={<HistoryPage />} />
             </Routes>
         </BrowserRouter>

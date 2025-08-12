@@ -10,13 +10,13 @@ import {
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import {Dropdown, type Item} from "../../components/Dropdown.tsx";
-import ErrorAlert from "../../components/ErrorAlert.tsx";
-import {type SubmitAction, SubmitButton} from "../../components/SubmitButton.tsx";
-import {usePostJson} from "../../hooks/usePostJSON.tsx";
-import {useGetJson} from "../../hooks/useGetJSON.tsx";
-import {useUpdateWhenEqual} from "../../hooks/useUpdateWhenEqual.tsx"
-import {EditableNameDropdown, type ClickHandler} from "../../components/EditableNameDropdown.tsx";
+import {Dropdown, type Item} from "../../../components/Dropdown.tsx";
+import ErrorAlert from "../../../components/ErrorAlert.tsx";
+import {type SubmitAction, SubmitButton} from "../../../components/SubmitButton.tsx";
+import {usePostJson} from "../../../hooks/usePostJSON.tsx";
+import {useGetJson} from "../../../hooks/useGetJSON.tsx";
+import {useUpdateWhenEqual} from "../../../hooks/useUpdateWhenEqual.tsx"
+import {EditableNameDropdown, type ClickHandler} from "../../../components/EditableNameDropdown.tsx";
 
 
 import {
@@ -24,11 +24,10 @@ import {
     initialFormValues,
     type FormSchemaInput, 
     type FormSchemaOutput, 
-    type SubmittableFormData,
-    type ValidationMode
-} from "../../../validation/create/schedule.tsx"
+    type SubmittableFormData
+} from "../../../../validation/create/schedule/day.tsx"
 
-import "../../scss/pages/create/Schedule.scss"
+import "../../../scss/pages/create/schedule/CreateScheduleDay.scss"
 
 interface TimeProps {
     index: number
@@ -188,7 +187,7 @@ function useSubmitData (submitData: SubmittableFormData | null) {
     )
 }
 
-function PresetSchedule() {
+function CreateScheduleDay() {
     const [validationMode, setValidationMode] = useState<"submitted" | "unsubmitted">("unsubmitted");
     const [submitData, setSubmitData] = useState<SubmittableFormData | null>(null)
     
@@ -334,4 +333,4 @@ function PresetSchedule() {
     );
 }
 
-export default PresetSchedule;
+export default CreateScheduleDay;
