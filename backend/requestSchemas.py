@@ -54,7 +54,7 @@ class DayPresetSchemas():
     _preset = ConstraintSchema(
         int, 
         filter_fn = lambda x: 
-            (x >= 0) 
+            (x > 0) 
             and (x <= DayPresetSchemas._max_preset_id)
     )
 
