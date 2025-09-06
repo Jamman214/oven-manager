@@ -21,11 +21,11 @@ import {
     sectors,
     type Sector,
     type Limit
-} from "../../../validation/create/preset.tsx"
+} from "../../../validation/preset/atomicPreset.tsx"
 
 import CreateOrEdit from "./CreateOrEdit.tsx";
 
-import "../../scss/pages/create/CreatePreset.scss"
+import "../../scss/pages/preset/AtomicPreset.scss"
 
 // ------------------------------------------------------------
 // Temperatures
@@ -41,11 +41,12 @@ function TemperatureField({
     const {
         trigger,
         register,
-        formState: { errors },
+        formState: { errors, touchedFields },
     } = useFormContext<FormInput>();
 
     const path = `temperature.${sector}.${limit}` as const;
 
+    const touched = touchedFields.temperature?.[sector]?.[limit];
     const fieldError = errors.temperature?.[sector]?.[limit];
 
     const onBlur = async () => {
@@ -65,7 +66,7 @@ function TemperatureField({
             />
         </FloatingInput>
         <ErrorAlert 
-            error={fieldError?.message}
+            error={touched && fieldError?.message}
         />
     </>;
 }
@@ -113,10 +114,8 @@ interface FormProps {
     submitAction: SubmitAction;
 }
 
-function PresetForm({submitAction}: FormProps) {
-    const {formState: {isSubmitting}} = useFormContext<FormInput>()
+function AtomicPresetForm({submitAction}: FormProps) {
     return <>
-        
         {sectors.map((sector, i) => (
             <SectorFieldGroup
                 key={i}
@@ -125,12 +124,12 @@ function PresetForm({submitAction}: FormProps) {
         ))}
 
         <div className="formButtons">
-            <SubmitButton action={submitAction} text={{ resetText: "Save Schedule" }} />
+            <SubmitButton action={submitAction} text={{ resetText: "Save Preset" }} />
         </div>
     </>
 }
 
-function CreatePreset() {
+function AtomicPreset() {
     const [submitAction, setSubmitAction] = useState<SubmitAction>("SUBMIT");
 
     return (
@@ -139,17 +138,17 @@ function CreatePreset() {
             formSchema={formSchema}
             apiSchema={apiSchema}
             initialFormValues={initialFormValues}
-            namesRoute="/api/get/presets"
-            dataRoute="/api/get/preset"
-            editRoute="/api/edit/preset"
-            createRoute="/api/create/preset"
+            namesRoute="/api/get/presets/atomic"
+            dataRoute="/api/get/preset/atomic"
+            editRoute="/api/edit/preset/atomic"
+            createRoute="/api/create/preset/atomic"
             toApi={toApi}
             fromApi={fromApi}
             setSubmitAction={setSubmitAction}
         >
-            <PresetForm submitAction={submitAction}/>
+            <AtomicPresetForm submitAction={submitAction}/>
         </CreateOrEdit>
     );
 }
 
-export default CreatePreset;
+export default AtomicPreset;

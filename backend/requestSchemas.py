@@ -1,14 +1,14 @@
 from validateRequest import ConstraintSchema, DictSchema, ListSchema, expected_keys
 
-class PresetSchemas():
+class AtomicPresetSchemas():
     _min_temp = 0
     _max_temp = 500
 
     _limit = ConstraintSchema(
         int, 
         filter_fn = lambda x: 
-            (x >= PresetSchemas._min_temp) 
-            and (x <= PresetSchemas._max_temp)
+            (x >= AtomicPresetSchemas._min_temp) 
+            and (x <= AtomicPresetSchemas._max_temp)
     )
     
     _sector = ConstraintSchema(
@@ -48,14 +48,14 @@ class PresetSchemas():
         'temperature': _temperature
     }))
 
-class ScheduleSchemas():
+class DayPresetSchemas():
     _max_preset_id = 10 # Is this necessary? Could be implemented with triggers later
     
     _preset = ConstraintSchema(
         int, 
         filter_fn = lambda x: 
             (x >= 0) 
-            and (x <= ScheduleSchemas._max_preset_id)
+            and (x <= DayPresetSchemas._max_preset_id)
     )
 
     _hour = ConstraintSchema(int, filter_fn=lambda x : (x >= 0) and (x <= 24))
@@ -98,6 +98,6 @@ class ScheduleSchemas():
     
 
 class requestSchemas():
-    preset = PresetSchemas
-    schedule = ScheduleSchemas
+    atomicPreset = AtomicPresetSchemas
+    dayPreset = DayPresetSchemas
     

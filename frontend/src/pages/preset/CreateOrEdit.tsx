@@ -16,7 +16,7 @@ import { useUpdateWhenEqual } from "../../hooks/useUpdateWhenEqual.tsx"
 import { EditableNameDropdown } from "../../components/EditableNameDropdown.tsx";
 import { type SubmitAction } from "../../components/SubmitButton.tsx";
 
-import { requiredFormFields, requiredApiFields } from "../../../validation/create/createOrEdit.tsx";
+import { requiredFormFields, requiredApiFields } from "../../../validation/preset/createOrEdit.tsx";
 
 type MinimalFormInput = z.input<typeof requiredFormFields>
 type MinimalFormOutput = z.infer<typeof requiredFormFields>

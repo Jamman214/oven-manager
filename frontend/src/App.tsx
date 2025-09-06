@@ -4,8 +4,8 @@ import NavBar from "./components/NavBar";
 import HomePage from "./pages/Home";
 import ConfigPage from "./pages/Config";
 import HistoryPage from "./pages/History";
-import CreatePreset from "./pages/create/CreatePreset";
-import CreateScheduleDay from "./pages/create/schedule/CreateScheduleDay";
+import AtomicPreset from "./pages/preset/AtomicPreset";
+import DayPreset from "./pages/preset/DayPreset";
 
 
 import "./scss/App.scss";
@@ -22,10 +22,10 @@ function App() {
                 items={[
                     { text: "Config", link: "/config" },
                     {
-                        header: { text: "Create", link: "/create"},
+                        header: { text: "Presets", link: "/preset"},
                         subitems: [
-                            { text: "Preset", link: "/create/preset" },
-                            { text: "Day Schedule", link: "/create/schedule/day" },
+                            { text: "Day", link: "/preset/day" },
+                            { text: "Week", link: "/preset/week" },
                         ],
                     },
                     { text: "History", link: "/history" },
@@ -34,8 +34,8 @@ function App() {
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/config" element={<ConfigPage />} />
-                <Route path="/create/preset" element={<CreatePreset />} />
-                <Route path="/create/schedule/day" element={<CreateScheduleDay />} />
+                <Route path="/preset/day" element={<AtomicPreset />} />
+                <Route path="/preset/week" element={<DayPreset />} />
                 <Route path="/history" element={<HistoryPage />} />
             </Routes>
         </BrowserRouter>

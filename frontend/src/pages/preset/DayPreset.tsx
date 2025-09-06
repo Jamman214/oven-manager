@@ -5,13 +5,13 @@ import {
 } from "react-hook-form";
 import { z } from "zod"
 
-import { useGetJson } from "../../../hooks/useGetJSON.tsx";
+import { useGetJson } from "../../hooks/useGetJSON.tsx";
 
-import { Dropdown, type Item } from "../../../components/Dropdown.tsx";
-import { ErrorAlert } from "../../../components/ErrorAlert.tsx";
-import { SubmitButton} from "../../../components/SubmitButton.tsx";
+import { Dropdown, type Item } from "../../components/Dropdown.tsx";
+import { ErrorAlert } from "../../components/ErrorAlert.tsx";
+import { SubmitButton} from "../../components/SubmitButton.tsx";
 
-import { type SubmitAction } from "../../../components/SubmitButton.tsx";
+import { type SubmitAction } from "../../components/SubmitButton.tsx";
 
 import {
     formSchema,
@@ -20,10 +20,10 @@ import {
     toApi,
     fromApi,
     type FormInput,
-} from "../../../../validation/create/schedule/day.tsx"
+} from "../../../validation/preset/dayPreset.tsx"
 
-import "../../../scss/pages/create/schedule/CreateScheduleDay.scss"
-import CreateOrEdit from "../CreateOrEdit.tsx";
+import "../../scss/pages/preset/DayPreset.scss"
+import CreateOrEdit from "./CreateOrEdit.tsx";
 
 interface TimeProps {
     index: number
@@ -100,7 +100,7 @@ interface FormFieldsProps {
 
 function FormFields({presetFields} : FormFieldsProps) {
     const [data, isLoading, error] = useGetJson<{id: number, name: string}[]>(
-        "/api/get/presets",
+        "/api/get/presets/atomic",
         z.array(z.object({
             id: z.number().min(0),
             name: z.string().min(1)
@@ -129,7 +129,7 @@ interface FormProps {
     submitAction: SubmitAction;
 }
 
-function ScheduleDayForm({submitAction}: FormProps) {
+function DayPresetForm({submitAction}: FormProps) {
     const { control } = useFormContext<FormInput>()
 
     // ------------------------------------------------------------
@@ -164,32 +164,32 @@ function ScheduleDayForm({submitAction}: FormProps) {
 
         <div className="formButtons">
             <button className="formButton" type="button" onClick={remove}>-</button>
-            <SubmitButton action={submitAction} text={{ resetText: "Save Schedule" }} />
+            <SubmitButton action={submitAction} text={{ resetText: "Save Preset" }} />
             <button className="formButton" type="button" onClick={append}>+</button>
         </div>
     </>
 }
 
-function CreateScheduleDay() {
+function DayPreset() {
     const [submitAction, setSubmitAction] = useState<SubmitAction>("SUBMIT");
 
     return (
         <CreateOrEdit
-            legendText="Schedule"
+            legendText="Preset"
             formSchema={formSchema}
             apiSchema={apiSchema}
             initialFormValues={initialFormValues}
-            namesRoute="/api/get/schedules"
-            dataRoute="/api/get/schedule"
-            editRoute="/api/edit/schedule"
-            createRoute="/api/create/schedule"
+            namesRoute="/api/get/presets/day"
+            dataRoute="/api/get/preset/day"
+            editRoute="/api/edit/preset/day"
+            createRoute="/api/create/preset/day"
             toApi={toApi}
             fromApi={fromApi}
             setSubmitAction={setSubmitAction}
         >
-            <ScheduleDayForm submitAction={submitAction}/>
+            <DayPresetForm submitAction={submitAction}/>
         </CreateOrEdit>
     );
 }
 
-export default CreateScheduleDay;
+export default DayPreset;

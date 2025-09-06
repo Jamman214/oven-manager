@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { requiredFormFields, requiredApiFields } from "../createOrEdit"
+import { requiredFormFields, requiredApiFields } from "./createOrEdit"
 
 const formSchema = z.object({
     ...requiredFormFields.shape,
