@@ -74,9 +74,9 @@ function EditableDropdown ({inputProps, valueProps, itemProps, defaultItem, item
             className={`dropdown ${expanded ? "expanded" : ""}`}
             ref={dropdownRef}
         >
-            {itemList.map((item, i) => 
+            {itemList.map((item) => 
                 <button 
-                    key={i}
+                    key={item.value}
                     type="button"
                     onClick={(e) => {
                         setExpanded(false);

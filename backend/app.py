@@ -42,13 +42,13 @@ db_presets = [
 db_schedules = [
     {
         'id': 1,
-        'name': "preset1",
+        'name': "schedule1",
         'preset': [1, 2, 1],
         'time': [{'hour': 12, 'minute': 24}, {'hour': 23, 'minute': 12}]
     },
     {
         'id': 2,
-        'name': "preset2",
+        'name': "schedule2",
         'preset': [2],
         'time': []
     }
@@ -95,6 +95,8 @@ def edit_preset():
     preset, error_message = validate_json_request(requestSchemas.preset.edit, request)
     if preset is None:
         return error_message, 400
+
+    sleep(3)
     
     for i, existing_preset in enumerate(db_presets):
         if (existing_preset['id'] == preset['id']):

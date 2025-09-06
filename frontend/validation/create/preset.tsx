@@ -1,12 +1,4 @@
 import { z } from "zod";
-import { 
-    idSchemas, 
-    nameSchemas, 
-    type ValidationMode
-} from "./name.tsx"
-// ------------------------------------------------------------
-// Important constants
-// ------------------------------------------------------------
 
 const sectors = ["core", "oven"] as const;
 type Sector = (typeof sectors)[number];
@@ -14,151 +6,120 @@ type Sector = (typeof sectors)[number];
 const limits = ["high", "low"] as const;
 type Limit = (typeof limits)[number];
 
-// ------------------------------------------------------------
-// Schema for limit
-// ------------------------------------------------------------
+import { requiredFormFields, requiredApiFields } from "./createOrEdit"
 
-const simpleLimitSchema = z.number().nullable()
-const createLimitSchemas = () => {
-    const tempRange = {min: 0, max: 500}
-    const strictSchema = z
-        .number({invalid_type_error: "Must enter a number"})
-        .min(tempRange.min, `Temperature must be ≥ ${tempRange.min}`)
-        .max(tempRange.max, `Temperature must be ≤ ${tempRange.max}`)
-        .refine(
-            (val) => Number.isInteger(val),
-            {message: "Must enter an integer"}
-        );
-    return {
-        submitted: strictSchema,
-        unsubmitted: strictSchema.nullable(),
-        received: strictSchema
-    } as const
-}
-const limitSchemas = createLimitSchemas()
+const tempRange = {min: 0, max: 500}
 
-// ------------------------------------------------------------
-// Schema for sector
-// ------------------------------------------------------------
+const apiLimitSchema = z
+    .number({message: "Must enter a number"})
+    .int("Must enter a whole number")
+    .min(tempRange.min, `Temperature must be ≥ ${tempRange.min}`)
+    .max(tempRange.max, `Temperature must be ≤ ${tempRange.max}`)
 
-const simpleSectorSchema = z.object({high: simpleLimitSchema, low: simpleLimitSchema})
-const createSectorSchema = <K extends ValidationMode>(key: K) => {
-    const baseSchema = z
-        .object({
-            high: limitSchemas[key],
-            low: limitSchemas[key],
-        })
+const formLimitSchema = z
+    .string()
+    .regex(/^[+-]?\d+$/, "Must enter a whole number")
+    .transform(data => parseInt(data, 10))
+    .pipe(
+        apiLimitSchema
+    )
 
-    return baseSchema.pipe(
-        simpleSectorSchema.superRefine((data, ctx) => {
-            if (
-                typeof data.high === "number"
-                && typeof data.low === "number"
-                && data.high < data.low
-            ) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: "High cannot be colder than low",
-                    path: [],
-                });
-            }
-        })
-    );
-}
-
-const sectorSchemas = {
-    submitted: createSectorSchema("submitted"),
-    unsubmitted: createSectorSchema("unsubmitted"),
-    received: createSectorSchema("received"),
-} as const;
-
-// ------------------------------------------------------------
-// Schema for temperature
-// ------------------------------------------------------------
-
-const simpleTemperatureSchema = z.object({core: simpleSectorSchema, oven: simpleSectorSchema})
-const createTemperatureSchema = <K extends ValidationMode>(key: K) => {
-    const baseSchema = z.object({
-        core: sectorSchemas[key],
-        oven: sectorSchemas[key]
-    })
-    
-    return baseSchema.pipe(
-        simpleTemperatureSchema.superRefine((data, ctx) => {
-        if (
-            typeof data.core?.low === "number"
-            && typeof data.oven?.high === "number"
-            && data.oven.high > data.core.low
-
-        ) {
+const sectorSchema = <T,> (limitSchema: z.ZodType<number, T>) => z
+    .object({
+        high: limitSchema,
+        low: limitSchema,
+    }).superRefine((data, ctx) => {
+        if (data.low >= data.high) {
             ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "Core must be hotter than oven",
-                path: [],
+                code: "custom",
+                message: "Low must be colder than high",
+                path: ["low"],
             });
-            }
-        })
-    );
+        }
+    })
+
+const formSectorSchema = sectorSchema(formLimitSchema)
+const apiSectorSchema = sectorSchema(apiLimitSchema)
+
+const temperatureSchema = <T,> (sectorSchema: z.ZodType<{high: number, low: number}, T>) => z
+    .object({
+        core: sectorSchema,
+        oven: sectorSchema
+    }).superRefine((data, ctx) => {
+        if (data.oven.high >= data.core.low) {
+            ctx.addIssue({
+                code: "custom",
+                message: "Oven must be colder than core",
+                path: ["oven", "high"],
+            });
+        }
+    })
+
+const formTemperatureSchema = temperatureSchema(formSectorSchema)
+const apiTemperatureSchema = temperatureSchema(apiSectorSchema)
+
+const formSchema = z.object({
+    ...requiredFormFields.shape,
+    temperature: formTemperatureSchema
+})
+
+const apiSchema = z.object({
+    ...requiredApiFields.shape,
+    temperature: apiTemperatureSchema
+})
+
+type FormInput = z.input<typeof formSchema>
+type FormOutput = z.infer<typeof formSchema>
+
+type ApiInput = z.input<typeof apiSchema>
+type ApiOutput = z.infer<typeof apiSchema>
+
+const toApi = (data: FormOutput): ApiInput => {
+    const id = (data.id === "") ? undefined : parseInt(data.id)
+    return {...data, id}
 }
 
-const temperatureSchemas = {
-    submitted: createTemperatureSchema("submitted"),
-    unsubmitted: createTemperatureSchema("unsubmitted"),
-    received: createTemperatureSchema("received"),
-} as const;
-
-
-// ------------------------------------------------------------
-// Schema for form
-// ------------------------------------------------------------
-
-const createFormSchema = <K extends ValidationMode>(key: K) => {
-    return z.object({
-        id: idSchemas[key],
-        name: nameSchemas[key], 
-        temperature: temperatureSchemas[key]
-    });
+const fromApi = (data: ApiOutput): FormInput => {
+    const sectorToString = (sector: {high: number, low: number}) => ({
+        high: sector.high.toString(),
+        low: sector.low.toString()
+    })
+    const temperature = {
+        core: sectorToString(data.temperature.core),
+        oven: sectorToString(data.temperature.oven)
+    }
+    const id = (data.id ?? "").toString()
+    return {...data, id, temperature}
 }
 
-const formSchemas = {
-    submitted: createFormSchema("submitted"),
-    unsubmitted: createFormSchema("unsubmitted"),
-    received: createFormSchema("received"),
-} as const;
-
-// ------------------------------------------------------------
-// Values and types
-// ------------------------------------------------------------
-
-const initialFormValues = {
-    id: null,
-    name: null,
+const initialFormValues: FormInput = {
+    id: "",
+    name: "",
     temperature: {
         core: {
-            high: null,
-            low: null
+            high: "",
+            low: ""
         },
         oven: {
-            high: null,
-            low: null
+            high: "",
+            low: ""
         }
     }
 }
 
-type FormSchemaInput = z.input<typeof formSchemas.submitted> | z.input<typeof formSchemas.unsubmitted>;
-type FormSchemaOutput = z.infer<typeof formSchemas.submitted> | z.infer<typeof formSchemas.unsubmitted>
-type SubmittableFormData = z.infer<typeof formSchemas.submitted>;
-
 export {
-    formSchemas, 
+    formSchema,
+    apiSchema,
     initialFormValues,
-    sectors, 
-    limits, 
-    
-    type FormSchemaInput, 
-    type FormSchemaOutput, 
-    type SubmittableFormData,
-    type ValidationMode,
-    type Sector, 
-    type Limit    
+    toApi,
+    fromApi,
+    type FormInput,
+    type FormOutput,
+    type ApiInput,
+    type ApiOutput,
+
+    limits,
+    sectors,
+    type Sector,
+    type Limit
 };

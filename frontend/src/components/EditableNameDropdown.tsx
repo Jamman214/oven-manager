@@ -33,13 +33,15 @@ interface Props {
 function EditableNameDropdown({ refreshOnChange, namesRoute, selectHandler }: Props) {
     const {
         reset,
-        formState: { errors },
+        formState: { errors, touchedFields, isSubmitted },
         register,
         setValue
     } = useFormContext<{id: number, name: string}>();
 
     // list of available presets
     const presets = usePresets(namesRoute, refreshOnChange);
+
+    const showError = touchedFields.name || isSubmitted;
 
     return (
         <>
@@ -49,14 +51,7 @@ function EditableNameDropdown({ refreshOnChange, namesRoute, selectHandler }: Pr
             >
                 <EditableDropdown 
                     inputProps={{id:"name", placeholder:" ", ...register("name")}}
-                    valueProps={{
-                        // ...register(
-                        //     "id", 
-                        //     {setValueAs: (value) => (value==="") ? null : parseInt(value)}
-                        // )
-                        // Doesnt trigger react-hook-form so no point
-
-                    }}
+                    valueProps={{}}
                     itemProps={{onClick: selectHandler}}
                     defaultItem={{value:"", text:"new", editText:""}}
                     items={
@@ -69,7 +64,7 @@ function EditableNameDropdown({ refreshOnChange, namesRoute, selectHandler }: Pr
                 />
             </FloatingInput>
             <ErrorAlert 
-                error={errors?.name?.message}
+                error={showError && errors?.name?.message}
             />
         </>
     );

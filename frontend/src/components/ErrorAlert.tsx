@@ -1,5 +1,5 @@
 interface Props {
-    error: string|undefined;
+    error: string | undefined | false;
 }
 
 function ErrorAlert({error}: Props) {

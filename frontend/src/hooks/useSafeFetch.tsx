@@ -43,7 +43,7 @@ function useSafeFetch<T>(
         dependencies = [], 
         requirements, 
         dataCompiler = (prev, next) => next,
-        resetDataOnFetch = true
+        resetDataOnFetch = false
     } : {
         init?: Omit<FetchInit, "signal">,
         okResponseHandler?: ResponseHandler<T>,
@@ -92,12 +92,12 @@ function useSafeFetch<T>(
         const runFetch = async () => {
             try {
                 const response = await fetch(input, {...init, signal});
-                
                 if (!response.ok) {
                     throw new Error(`HTTP Error! Status: ${response.status}`)
                 }
 
                 if (!okResponseHandler) {
+                    // Doesnt do anything with response
                     dispatch({type: "setIsLoading", isLoading: false});
                     return;
                 }
@@ -107,9 +107,8 @@ function useSafeFetch<T>(
 
             } catch (unknownThrown) {
                 const error = toError(unknownThrown);
-                if (error.name === "AbortError") return;
+                // if (error.name === "AbortError") return;
                 dispatch({type: "setError", error});
-                console.log(`Caught fetch error: ${error}`);
             }
         };
         runFetch();

@@ -1,35 +1,29 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
-    useForm,
-    FormProvider,
     useFormContext,
-    type Path
 } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {z} from "zod";
 
-import {useGetJson} from "../../hooks/useGetJSON.tsx";
-import {usePostJson} from "../../hooks/usePostJSON.tsx";
-import {useUpdateWhenEqual} from "../../hooks/useUpdateWhenEqual.tsx"
+import { type SubmitAction } from "../../components/SubmitButton.tsx";
 
 import { ErrorAlert } from "../../components/ErrorAlert.tsx";
 import { SubmitButton } from "../../components/SubmitButton.tsx";
 import { FloatingInput } from "../../components/FloatingInput.tsx";
-import { EditableNameDropdown } from "../../components/EditableNameDropdown.tsx";
 
 import {
-    formSchemas, 
+    formSchema,
+    apiSchema,
     initialFormValues,
-    sectors, 
-    limits, 
-    
-    type FormSchemaInput, 
-    type FormSchemaOutput, 
-    type SubmittableFormData,
-    type ValidationMode,
-    type Sector, 
-    type Limit  
+    toApi,
+    fromApi,
+    type FormInput,
+
+    limits,
+    sectors,
+    type Sector,
+    type Limit
 } from "../../../validation/create/preset.tsx"
+
+import CreateOrEdit from "./CreateOrEdit.tsx";
 
 import "../../scss/pages/create/CreatePreset.scss"
 
@@ -48,7 +42,7 @@ function TemperatureField({
         trigger,
         register,
         formState: { errors },
-    } = useFormContext<FormSchemaInput, unknown, FormSchemaOutput>();
+    } = useFormContext<FormInput>();
 
     const path = `temperature.${sector}.${limit}` as const;
 
@@ -66,7 +60,7 @@ function TemperatureField({
             <input 
                 type="text"
                 inputMode="numeric"
-                {...register(path, {valueAsNumber: true, onBlur})}
+                {...register(path, {valueAsNumber: false, onBlur})}
                 placeholder=" "
             />
         </FloatingInput>
@@ -84,7 +78,7 @@ function capitalise(word: string) {
 function SectorFieldGroup({sector,}: {sector: Sector;}) {
     const {
         formState: { errors },
-    } = useFormContext<FormSchemaInput, unknown, FormSchemaOutput>();
+    } = useFormContext<FormInput>();
 
     const fieldError = errors.temperature?.[sector];
 
@@ -115,167 +109,46 @@ function SectorFieldGroup({sector,}: {sector: Sector;}) {
 // Rest of the form
 // ------------------------------------------------------------
 
-function usePresetData (presetID: number | null, modifiedCount: number) {
-    const urlPresetID = presetID === null ? "" : "" + presetID
-    const [_presetData, isPresetDataLoading, presetDataError] = useGetJson(
-        "/api/get/preset",
-        formSchemas.received,
-        {
-            requirements: () => presetID !== null,
-            dependencies: [presetID, modifiedCount]
-        },
-        {id: urlPresetID}
-    )
-
-    const [presetData, setPresetData] = useState<
-        z.infer<typeof formSchemas.received>
-        | typeof initialFormValues
-    >(initialFormValues)
-
-    useEffect(() => {
-        if (isPresetDataLoading || presetDataError) return;
-        setPresetData(presetID === null ? initialFormValues : _presetData || initialFormValues)
-    }, [_presetData, presetID])
-
-    return presetData;
+interface FormProps {
+    submitAction: SubmitAction;
 }
 
-function useSubmitData (submitData: SubmittableFormData | null) {
-    const submitRoute = submitData
-        ? ( 
-            (submitData.id === null)
-            ? "/api/create/preset"
-            : "/api/edit/preset"
-        ) : ""
+function PresetForm({submitAction}: FormProps) {
+    const {formState: {isSubmitting}} = useFormContext<FormInput>()
+    return <>
+        
+        {sectors.map((sector, i) => (
+            <SectorFieldGroup
+                key={i}
+                sector={sector}
+            />
+        ))}
 
-    const [data, isLoading, error] = usePostJson(
-        submitRoute,
-        submitData && (
-            submitData.id !== null 
-                ? submitData 
-                : {
-                    name: submitData.name,
-                    temperature: submitData.temperature
-                }
-        ),
-        {
-            requirements: () => (submitData !== null),
-            dependencies: [submitData]
-        }
-    )
-
-    return (
-        isLoading ? "SUBMIT"
-        : data ? "SUCCEED"
-        : error ? "FAIL"
-        : "RESET"
-    )
+        <div className="formButtons">
+            <SubmitButton action={submitAction} text={{ resetText: "Save Schedule" }} />
+        </div>
+    </>
 }
-
-
 
 function CreatePreset() {
-    const [validationMode, setValidationMode] = useState<ValidationMode>("unsubmitted");
-    const [submitData, setSubmitData] = useState<SubmittableFormData | null>(null)
-    
-    const { ...methods } = useForm<FormSchemaInput, unknown, FormSchemaOutput>({
-        resolver: zodResolver(
-            formSchemas[validationMode]
-        ),
-        mode: "onBlur",
-        defaultValues: initialFormValues,
-    });
-
-    const { reset, watch, setValue, getValues, setError } = methods;
-
-    const submitAction = useSubmitData(submitData)
-    const editedOrSavedCount = useUpdateWhenEqual(submitAction, "SUCCEED") // Save or edit
-
-    // ID of current preset
-    const presetID = watch("id");
-
-    const presetData = usePresetData(presetID, editedOrSavedCount);
-
-    // Reset form values when a preset is selected
-    const nameSelectHandler = (
-        e: React.MouseEvent<HTMLButtonElement, MouseEvent>, 
-        {value}: {value: string}
-    ) => {
-        const newPresetID = value === "" ? null : parseInt(value)
-        setValidationMode("unsubmitted");
-        if (newPresetID === presetID) {
-            reset(presetData);
-        } else {
-            setValue("id", newPresetID);
-        }
-    }
-
-    useEffect(() => {
-        // Resets form once loaded
-        reset(presetData);
-    }, [presetData])
-
-    useEffect(() => {
-        // Blurs selected input and resets form when submitting new schema
-        if (submitData && submitData.id === null) {
-            const activeElement = document.activeElement
-            if (activeElement instanceof HTMLInputElement) {
-                activeElement.blur()
-            }
-            setValidationMode("unsubmitted");
-            reset(initialFormValues)
-        }
-    }, [editedOrSavedCount])
-
-    // ------------------------------------------------------------
-    // Form submission
-    // ------------------------------------------------------------
-    
-    const submitFunc = (
-        e?: React.BaseSyntheticEvent
-    ) => {
-        e?.preventDefault();
-
-        const data = getValues();
-        const result = formSchemas.submitted.safeParse(data);
-        if (result.success) {
-            setSubmitData(result.data);
-        } else {
-            for (const issue of result.error.issues) {
-                const path = issue.path.join(".") as Path<FormSchemaInput>;
-                setError(path, {
-                    type: "manual",
-                    message: issue.message,
-                });
-            }
-        }
-        setValidationMode("submitted")
-    }
-
-    // ------------------------------------------------------------
-    // JSX
-    // ------------------------------------------------------------
+    const [submitAction, setSubmitAction] = useState<SubmitAction>("SUBMIT");
 
     return (
-        <FormProvider {...methods}>
-            <form onSubmit={submitFunc} noValidate>
-                <fieldset>
-                    <legend className="group-label">Preset</legend>
-                    <EditableNameDropdown 
-                        namesRoute="/api/get/presets"
-                        refreshOnChange={editedOrSavedCount}
-                        selectHandler={nameSelectHandler}
-                    />
-                </fieldset>
-                {sectors.map((sector, i) => (
-                    <SectorFieldGroup
-                        key={i}
-                        sector={sector}
-                    />
-                ))}
-                <SubmitButton action={submitAction} text={{ resetText: "Save Preset" }} />
-            </form>
-        </FormProvider>
+        <CreateOrEdit
+            legendText="Schedule"
+            formSchema={formSchema}
+            apiSchema={apiSchema}
+            initialFormValues={initialFormValues}
+            namesRoute="/api/get/presets"
+            dataRoute="/api/get/preset"
+            editRoute="/api/edit/preset"
+            createRoute="/api/create/preset"
+            toApi={toApi}
+            fromApi={fromApi}
+            setSubmitAction={setSubmitAction}
+        >
+            <PresetForm submitAction={submitAction}/>
+        </CreateOrEdit>
     );
 }
 

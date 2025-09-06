@@ -5,7 +5,7 @@ import {z} from "zod"
 
 function useGetJson<T>(
     route: string, 
-    schema: z.ZodType<T>, 
+    schema: z.ZodType<T, unknown>, 
     options: {
         requirements?: () => boolean,
         dependencies?: DependencyList

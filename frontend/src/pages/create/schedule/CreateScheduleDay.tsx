@@ -1,32 +1,29 @@
-import { useEffect, useState, Fragment } from "react";
+import { useState, Fragment } from "react";
 import { 
-    useForm, 
-    FormProvider, 
     useFieldArray, 
     useFormContext, 
-    type Path 
 } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod"
 
-import { usePostJson } from "../../../hooks/usePostJSON.tsx";
 import { useGetJson } from "../../../hooks/useGetJSON.tsx";
-import { useUpdateWhenEqual } from "../../../hooks/useUpdateWhenEqual.tsx"
 
-import { EditableNameDropdown } from "../../../components/EditableNameDropdown.tsx";
 import { Dropdown, type Item } from "../../../components/Dropdown.tsx";
 import { ErrorAlert } from "../../../components/ErrorAlert.tsx";
 import { SubmitButton} from "../../../components/SubmitButton.tsx";
 
+import { type SubmitAction } from "../../../components/SubmitButton.tsx";
+
 import {
-    formSchemas, 
+    formSchema,
+    apiSchema,
     initialFormValues,
-    type FormSchemaInput, 
-    type FormSchemaOutput, 
-    type SubmittableFormData
+    toApi,
+    fromApi,
+    type FormInput,
 } from "../../../../validation/create/schedule/day.tsx"
 
 import "../../../scss/pages/create/schedule/CreateScheduleDay.scss"
+import CreateOrEdit from "../CreateOrEdit.tsx";
 
 interface TimeProps {
     index: number
@@ -36,10 +33,13 @@ function Time ({index}: TimeProps) {
     const {
         trigger,
         register,
-        formState: { errors },
-    } = useFormContext<FormSchemaInput, unknown, FormSchemaOutput>();
+        formState: { errors, touchedFields, isSubmitted },
+    } = useFormContext<FormInput>();
+
 
     const onBlur = async () => {await trigger("time")};
+
+    const showError = touchedFields.time?.[index]?.value || isSubmitted;
 
     return (
         <>            
@@ -52,7 +52,9 @@ function Time ({index}: TimeProps) {
                 )}
             />
             <ErrorAlert 
-                error={errors.time?.[index]?.value?.message}
+                error={
+                    showError && errors.time?.[index]?.value?.message
+                }
             />
         </>
     )
@@ -66,19 +68,15 @@ interface PresetProps {
 function Preset ({index, options}: PresetProps) {
     const {
         register,
-        formState: { errors },
-        getValues,
+        formState: { errors, touchedFields, isSubmitted },
         trigger
-    } = useFormContext<FormSchemaInput, unknown, FormSchemaOutput>();
+    } = useFormContext<FormInput>();
 
     const path = `preset.${index}.value` as const
 
-    const {onChange, ...otherRegister} = register(
-            path,
-            {
-                setValueAs: (value) => value === "" ? 0 : parseInt(value),
-            }
-        )
+    const {onChange, ...otherRegister} = register(path)
+
+    const showError = touchedFields.preset?.[index]?.value || isSubmitted;
 
     return <>
         <Dropdown
@@ -89,7 +87,9 @@ function Preset ({index, options}: PresetProps) {
             {...otherRegister}
         />
         <ErrorAlert 
-            error={errors.preset?.[index]?.value?.message}
+            error={
+                showError && errors.preset?.[index]?.value?.message
+            }
         />
     </>
 }
@@ -109,7 +109,9 @@ function FormFields({presetFields} : FormFieldsProps) {
     const options = data || [];
 
     return (
-        <>
+        <fieldset>
+            <legend className="group-label">Presets and Times</legend>
+                    
             {presetFields.map((field, index) => 
                 <Fragment key={field.id}>
                     {
@@ -119,134 +121,16 @@ function FormFields({presetFields} : FormFieldsProps) {
                     <Preset index={index} options={options}/>
                 </Fragment>
             )}
-        </>
+        </fieldset>
     );
 }
 
-
-// ------------------------------------------------------------
-// Rest of the form
-// ------------------------------------------------------------
-
-function useScheduleData (scheduleID: number | null, modifiedCount: number) {
-    const urlScheduleID = scheduleID === null ? "" : "" + scheduleID
-    const [_scheduleData, isScheduleDataLoading, scheduleDataError] = useGetJson(
-        "/api/get/schedule",
-        formSchemas.received,
-        {
-            requirements: () => scheduleID !== null,
-            dependencies: [scheduleID, modifiedCount]
-        },
-        {id: urlScheduleID}
-    )
-
-    const [scheduleData, setScheduleData] = useState<
-        z.infer<typeof formSchemas.received>
-        | typeof initialFormValues
-    >(initialFormValues)
-
-    useEffect(() => {
-        if (isScheduleDataLoading || scheduleDataError) return;
-        setScheduleData(scheduleID === null ? initialFormValues : _scheduleData || initialFormValues)
-    }, [_scheduleData, scheduleID])
-
-    return scheduleData;
+interface FormProps {
+    submitAction: SubmitAction;
 }
 
-function useSubmitData (submitData: SubmittableFormData | null) {
-    const submitRoute = submitData
-        ? ( 
-            (submitData.id === null)
-            ? "/api/create/schedule"
-            : "/api/edit/schedule"
-        ) : ""
-
-    const [data, isLoading, error] = usePostJson(
-        submitRoute,
-        submitData && (
-            submitData.id !== null 
-                ? submitData 
-                : {
-                    name: submitData.name,
-                    preset: submitData.preset,
-                    time: submitData.time
-                }
-        ),
-        {
-            requirements: () => (submitData !== null),
-            dependencies: [submitData]
-        }
-    )
-
-    return (
-        isLoading ? "SUBMIT"
-        : data ? "SUCCEED"
-        : error ? "FAIL"
-        : "RESET"
-    )
-}
-
-function CreateScheduleDay() {
-    const [validationMode, setValidationMode] = useState<"submitted" | "unsubmitted">("unsubmitted");
-    const [submitData, setSubmitData] = useState<SubmittableFormData | null>(null)
-    
-    const {...methods} = useForm<FormSchemaInput, unknown, FormSchemaOutput>({
-        resolver: zodResolver(formSchemas[validationMode]),
-        defaultValues: initialFormValues,
-        mode: "onBlur",
-    });
-
-    const {
-        control,
-        setValue,
-        getValues,
-        setError,
-        reset,
-        watch
-    } = methods;
-
-    console.log(methods.formState.errors.time)
-
-    const submitAction = useSubmitData(submitData)
-    const editedOrSavedCount = useUpdateWhenEqual(submitAction, "SUCCEED")
-
-    // ID of current preset
-    const presetID = watch("id");
-
-    const scheduleData = useScheduleData(presetID, editedOrSavedCount);
-
-    // Reset form values when a preset is selected
-    const scheduleSelectHandler = (
-        e: React.MouseEvent<HTMLButtonElement, MouseEvent>, 
-        {value}: {value: string}
-    ) => {
-        const newPresetID = value === "" ? null : parseInt(value)
-        setValidationMode("unsubmitted");
-        if (newPresetID === presetID) {
-            reset(scheduleData);
-        } else {
-            setValue("id", newPresetID);
-        }
-    }
-
-    useEffect(() => {
-        // Resets form once loaded
-        console.log("reset")
-        console.log(scheduleData)
-        reset(scheduleData);
-    }, [scheduleData])
-
-    useEffect(() => {
-        // Blurs selected input and resets form when submitting new schema
-        if (submitData && submitData.id === null) {
-            const activeElement = document.activeElement
-            if (activeElement instanceof HTMLInputElement) {
-                activeElement.blur()
-            }
-            setValidationMode("unsubmitted");
-            reset(initialFormValues)
-        }
-    }, [editedOrSavedCount])
+function ScheduleDayForm({submitAction}: FormProps) {
+    const { control } = useFormContext<FormInput>()
 
     // ------------------------------------------------------------
     // Field arrays
@@ -264,8 +148,8 @@ function CreateScheduleDay() {
     });
 
     const append = () => {
-        appendPreset({ value: null }, {shouldFocus: false});
-        appendTime({value: null}, {shouldFocus: false})
+        appendPreset({ value: "" }, {shouldFocus: false});
+        appendTime({value: ""}, {shouldFocus: false})
     }
 
     const remove = () => {
@@ -275,60 +159,36 @@ function CreateScheduleDay() {
         removeTime(l-1)
     }
 
-    // ------------------------------------------------------------
-    // Form submission
-    // ------------------------------------------------------------
-    
-    const submitFunc = (
-        e?: React.BaseSyntheticEvent
-    ) => {
-        e?.preventDefault();
+    return <>
+        <FormFields presetFields={presetFields}/>        
 
-        const data = getValues();
-        const result = formSchemas.submitted.safeParse(data);
-        if (result.success) {
-            setSubmitData(result.data);
-        } else {
-            for (const issue of result.error.issues) {
-                const path = issue.path.join(".") as Path<FormSchemaInput>;
-                setError(path, {
-                    type: "manual",
-                    message: issue.message,
-                });
-            }
-        }
-        setValidationMode("submitted")
-    }
+        <div className="formButtons">
+            <button className="formButton" type="button" onClick={remove}>-</button>
+            <SubmitButton action={submitAction} text={{ resetText: "Save Schedule" }} />
+            <button className="formButton" type="button" onClick={append}>+</button>
+        </div>
+    </>
+}
 
-    // ------------------------------------------------------------
-    // JSX
-    // ------------------------------------------------------------
+function CreateScheduleDay() {
+    const [submitAction, setSubmitAction] = useState<SubmitAction>("SUBMIT");
 
     return (
-        <FormProvider {...methods}>
-            <form onSubmit={submitFunc} noValidate>
-                <fieldset>
-                    <legend className="group-label">Schedule</legend>
-                    <EditableNameDropdown 
-                        namesRoute="/api/get/schedules"
-                        refreshOnChange={editedOrSavedCount}
-                        selectHandler={scheduleSelectHandler}
-                    />
-                </fieldset>
-
-                <fieldset>
-                    <legend className="group-label">Presets and Times</legend>
-                    <FormFields presetFields={presetFields}/>
-                </fieldset>
-                
-
-                <div className="formButtons">
-                    <button className="formButton" type="button" onClick={remove}>-</button>
-                    <SubmitButton action={submitAction} text={{ resetText: "Save Schedule" }} />
-                    <button className="formButton" type="button" onClick={append}>+</button>
-                </div>
-            </form>
-        </FormProvider>
+        <CreateOrEdit
+            legendText="Schedule"
+            formSchema={formSchema}
+            apiSchema={apiSchema}
+            initialFormValues={initialFormValues}
+            namesRoute="/api/get/schedules"
+            dataRoute="/api/get/schedule"
+            editRoute="/api/edit/schedule"
+            createRoute="/api/create/schedule"
+            toApi={toApi}
+            fromApi={fromApi}
+            setSubmitAction={setSubmitAction}
+        >
+            <ScheduleDayForm submitAction={submitAction}/>
+        </CreateOrEdit>
     );
 }
 
