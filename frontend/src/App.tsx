@@ -6,6 +6,7 @@ import ConfigPage from "./pages/Config";
 import HistoryPage from "./pages/History";
 import AtomicPreset from "./pages/preset/AtomicPreset";
 import DayPreset from "./pages/preset/DayPreset";
+import WeekPreset from "./pages/preset/WeekPreset";
 
 
 import "./scss/App.scss";
@@ -26,6 +27,7 @@ function App() {
                         subitems: [
                             { text: "Atomic", link: "/preset/atomic" },
                             { text: "Day", link: "/preset/day" },
+                            { text: "Week", link: "/preset/week" },
                         ],
                     },
                     { text: "History", link: "/history" },
@@ -36,6 +38,7 @@ function App() {
                 <Route path="/config" element={<ConfigPage />} />
                 <Route path="/preset/atomic" element={<AtomicPreset />} />
                 <Route path="/preset/day" element={<DayPreset />} />
+                <Route path="/preset/week" element={<WeekPreset />} />
                 <Route path="/history" element={<HistoryPage />} />
             </Routes>
         </BrowserRouter>

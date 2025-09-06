@@ -55,7 +55,9 @@ db_presets = {
                 'preset': [2],
                 'time': []
             }
-        ]
+        ],
+    
+    'week' : []
 }
 
 @app.route("/get/presets/atomic", methods=["GET"])
@@ -69,6 +71,13 @@ def get_presets_atomic():
 def get_presets_day():
     presets = []
     for preset in db_presets['day']:
+        presets.append({'id': preset['id'], 'name': preset['name']})
+    return jsonify(presets)
+
+@app.route("/get/presets/week", methods=["GET"])
+def get_presets_week():
+    presets = []
+    for preset in db_presets['week']:
         presets.append({'id': preset['id'], 'name': preset['name']})
     return jsonify(presets)
 
@@ -91,6 +100,17 @@ def get_preset_day():
         return "Invalid id", 400
 
     for preset in db_presets['day']:
+        if (preset['id'] == id):
+            return jsonify(preset)
+    return f'preset {id} does not exist', 404
+
+@app.route("/get/preset/week", methods=["GET"])
+def get_preset_week():
+    id = request.args.get('id', type=int)
+    if (not id) or (id < 1):
+        return "Invalid id", 400
+
+    for preset in db_presets['week']:
         if (preset['id'] == id):
             return jsonify(preset)
     return f'preset {id} does not exist', 404
@@ -124,6 +144,20 @@ def create_preset_day():
 
     return "Success", 200
 
+@app.route("/create/preset/week", methods=["POST"])
+def create_preset_week():
+    preset, error_message = validate_json_request(requestSchemas.weekPreset.create, request)
+    if preset is None:
+        return error_message, 400
+
+    max_id = 0
+    for existing_preset in db_presets['week']:
+        max_id = max(max_id, existing_preset['id'])
+    preset['id'] = max_id + 1
+    db_presets['week'].append(preset)
+
+    return "Success", 200
+
 @app.route("/edit/preset/atomic", methods=["POST"])
 def edit_preset_atomic():
     preset, error_message = validate_json_request(requestSchemas.atomicPreset.edit, request)
@@ -145,5 +179,17 @@ def edit_preset_day():
     for i, existing_preset in enumerate(db_presets['day']):
         if (existing_preset['id'] == preset['id']):
             db_presets['day'][i] = preset # Need to ensure this doesnt contain additional fields
+            return "Success", 200
+    return f'preset {id} does not exist', 404
+
+@app.route("/edit/preset/week", methods=["POST"])
+def edit_preset_week():
+    preset, error_message = validate_json_request(requestSchemas.weekPreset.edit, request)
+    if preset is None:
+        return error_message, 400
+    
+    for i, existing_preset in enumerate(db_presets['week']):
+        if (existing_preset['id'] == preset['id']):
+            db_presets['week'][i] = preset # Need to ensure this doesnt contain additional fields
             return "Success", 200
     return f'preset {id} does not exist', 404

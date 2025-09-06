@@ -66,7 +66,6 @@ class ListSchema(JsonSchema):
         
     def validate(self, json: Any) -> ValidationResult:
         if type(json) != list:
-            print(json, type(json))
             return False, f"Received type: {type(json)}, expected type: list"
         return self.validate_list_elements(json)
 
@@ -99,16 +98,18 @@ class DictSchema(JsonSchema):
         return True, ""
 
 
-def compare_json_types(schema: ConstrainedJson, json: Any) -> ValidationResult:    
+def compare_json_types(schema: ConstrainedJson, json: Any) -> ValidationResult:  
     if isinstance(schema, JsonSchema):
         return schema.validate(json)
     elif type(json) == schema:
         return True, ""
+    print(json, type(json), type(schema), schema)
     return False, f"Expected type {schema}, got type {type(json)}"
 
 
 def validate_json_request(schema: ConstrainedJson, 
                           request: Request) -> tuple[Json | None, str]:
+    print(schema.child.schema)
     if not request.is_json:
         return None, "Expected JSON"
     json = request.get_json()
