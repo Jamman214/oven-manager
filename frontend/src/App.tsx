@@ -24,8 +24,8 @@ function App() {
                     {
                         header: { text: "Presets", link: "/preset"},
                         subitems: [
+                            { text: "Atomic", link: "/preset/atomic" },
                             { text: "Day", link: "/preset/day" },
-                            { text: "Week", link: "/preset/week" },
                         ],
                     },
                     { text: "History", link: "/history" },
@@ -34,8 +34,8 @@ function App() {
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/config" element={<ConfigPage />} />
-                <Route path="/preset/day" element={<AtomicPreset />} />
-                <Route path="/preset/week" element={<DayPreset />} />
+                <Route path="/preset/atomic" element={<AtomicPreset />} />
+                <Route path="/preset/day" element={<DayPreset />} />
                 <Route path="/history" element={<HistoryPage />} />
             </Routes>
         </BrowserRouter>
