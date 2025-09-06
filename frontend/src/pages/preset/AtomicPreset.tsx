@@ -134,7 +134,7 @@ function AtomicPreset() {
 
     return (
         <CreateOrEdit
-            legendText="Schedule"
+            legendText="Atomic Preset"
             formSchema={formSchema}
             apiSchema={apiSchema}
             initialFormValues={initialFormValues}

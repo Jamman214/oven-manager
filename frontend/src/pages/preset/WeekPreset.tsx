@@ -70,7 +70,7 @@ function FormFields() {
 
     return (
         <fieldset>
-            <legend className="group-label">Presets and Times</legend>
+            <legend className="group-label">Daily Presets</legend>
                     
             {days.map((field, index) => 
                 <Fragment key={field}>
@@ -99,7 +99,7 @@ function WeekPreset() {
 
     return (
         <CreateOrEdit
-            legendText="Preset"
+            legendText="Week Preset"
             formSchema={formSchema}
             apiSchema={apiSchema}
             initialFormValues={initialFormValues}

@@ -110,7 +110,7 @@ function FormFields({presetFields} : FormFieldsProps) {
 
     return (
         <fieldset>
-            <legend className="group-label">Presets and Times</legend>
+            <legend className="group-label">Atomic Presets and Times</legend>
                     
             {presetFields.map((field, index) => 
                 <Fragment key={field.id}>
@@ -175,7 +175,7 @@ function DayPreset() {
 
     return (
         <CreateOrEdit
-            legendText="Preset"
+            legendText="Day Preset"
             formSchema={formSchema}
             apiSchema={apiSchema}
             initialFormValues={initialFormValues}
