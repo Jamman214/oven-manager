@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useState, useMemo, type ReactNode } from "react";
 import { 
     useForm, 
     FormProvider, 
@@ -159,7 +159,6 @@ function CreateOrEdit<
         reset,
         watch,
         handleSubmit,
-        formState: {isSubmitting}
     } = methods;
 
     const submitAction: SubmitAction = useSubmitData(submitData, editRoute, createRoute);
@@ -180,7 +179,7 @@ function CreateOrEdit<
 
     // Reset form values when a preset is selected
     const selectHandler = (
-        e: React.MouseEvent<HTMLButtonElement, MouseEvent>, 
+        _e: React.MouseEvent<HTMLButtonElement, MouseEvent>, 
         {value: newId}: {value: string}
     ) => {
         if (newId === id) {

@@ -21,7 +21,6 @@ import {
     type FormInput,
 
     days,
-    type Day
 } from "../../../validation/preset/weekPreset.tsx"
 
 import CreateOrEdit from "./CreateOrEdit.tsx";
@@ -35,7 +34,6 @@ function Preset ({index, options}: PresetProps) {
     const {
         register,
         formState: { errors, touchedFields, isSubmitted },
-        trigger
     } = useFormContext<FormInput>();
 
     const path = `preset.${index}` as const
@@ -58,7 +56,7 @@ function Preset ({index, options}: PresetProps) {
 }
 
 function FormFields() {
-    const [data, isLoading, error] = useGetJson<{id: number, name: string}[]>(
+    const [data, _isLoading, _error] = useGetJson<{id: number, name: string}[]>(
         "/api/get/presets/day",
         z.array(z.object({
             id: z.number().min(0),

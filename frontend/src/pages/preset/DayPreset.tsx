@@ -98,7 +98,7 @@ interface FormFieldsProps {
 }
 
 function FormFields({presetFields} : FormFieldsProps) {
-    const [data, isLoading, error] = useGetJson<{id: number, name: string}[]>(
+    const [data, _isLoading, _error] = useGetJson<{id: number, name: string}[]>(
         "/api/get/presets/atomic",
         z.array(z.object({
             id: z.number().min(0),
