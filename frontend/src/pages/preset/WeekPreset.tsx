@@ -24,7 +24,6 @@ import {
     type Day
 } from "../../../validation/preset/weekPreset.tsx"
 
-import "../../scss/pages/preset/DayPreset.scss"
 import CreateOrEdit from "./CreateOrEdit.tsx";
 
 interface PresetProps {

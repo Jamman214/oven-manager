@@ -25,8 +25,6 @@ import {
 
 import CreateOrEdit from "./CreateOrEdit.tsx";
 
-import "../../scss/pages/preset/AtomicPreset.scss"
-
 // ------------------------------------------------------------
 // Temperatures
 // ------------------------------------------------------------
@@ -41,12 +39,12 @@ function TemperatureField({
     const {
         trigger,
         register,
-        formState: { errors, touchedFields },
+        formState: { errors, touchedFields, isSubmitted },
     } = useFormContext<FormInput>();
 
     const path = `temperature.${sector}.${limit}` as const;
 
-    const touched = touchedFields.temperature?.[sector]?.[limit];
+    const showError = touchedFields.temperature?.[sector]?.[limit] || isSubmitted;
     const fieldError = errors.temperature?.[sector]?.[limit];
 
     const onBlur = async () => {
@@ -66,7 +64,7 @@ function TemperatureField({
             />
         </FloatingInput>
         <ErrorAlert 
-            error={touched && fieldError?.message}
+            error={showError && fieldError?.message}
         />
     </>;
 }

@@ -22,7 +22,6 @@ import {
     type FormInput,
 } from "../../../validation/preset/dayPreset.tsx"
 
-import "../../scss/pages/preset/DayPreset.scss"
 import CreateOrEdit from "./CreateOrEdit.tsx";
 
 interface TimeProps {

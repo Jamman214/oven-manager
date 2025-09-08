@@ -215,7 +215,7 @@ function CreateOrEdit<
     return (
         <FormProvider {...methods}>
             <form onSubmit={handleSubmit(submitFunc)} noValidate>
-                <fieldset {...{disabled: submitAction === "SUBMIT"}}>
+                <fieldset {...{disabled: submitAction === "SUBMIT"}} className="allFields">
                     <fieldset>
                         <legend className="group-label">{legendText}</legend>
                         <EditableNameDropdown 
