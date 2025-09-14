@@ -3,6 +3,8 @@ from validateRequest import validate_json_request
 from time import sleep
 from dotenv import load_dotenv
 from requestSchemas import requestSchemas
+import math
+import random
 
 app = Flask(__name__)
 load_dotenv()
@@ -193,3 +195,64 @@ def edit_preset_week():
             db_presets['week'][i] = preset # Need to ensure this doesnt contain additional fields
             return "Success", 200
     return f'preset {id} does not exist', 404
+
+@app.route("/get/history", methods=["GET"])
+def get_history_day():
+    durationMap = {
+        'hour': 60,
+        'day': 24 * 60,
+        'week': 7 * 24 * 60
+    }
+
+    duration = request.args.get('duration', type=str)
+    if duration not in durationMap:
+        return "Invalid duration", 400
+    
+    duration = durationMap[duration]
+
+    def genNew(num):
+        newNum = 0
+        if (num > 400):
+            newNum = num + math.floor(random.random() * 40 - 25)
+        elif (num > 100):
+            newNum = num + math.floor(random.random() * 40 - 20)
+        else:
+            newNum = num + math.floor(random.random() * 40 - 15)
+        
+        return max(0, min(500, newNum))
+    
+    temperatures = []
+    core = []
+    oven = []
+    curCoreTemp = 200
+    curOvenTemp = 200
+    prevCoreTime = 1757354360
+    prevOvenTime = 1757354360
+
+    tempChangeChance = 0.001
+
+    for i in range(0, duration):
+        curCoreTemp = genNew(curCoreTemp)
+        curOvenTemp = genNew(curOvenTemp)
+        temperatures.append({
+            'core': curCoreTemp,
+            'oven': curOvenTemp,
+            'time': 1757354360 + i * 60,
+        })
+        if (random.random() <= tempChangeChance):
+            core.append({'max': curCoreTemp + 10, 'min': curCoreTemp - 10, 'start': prevCoreTime, 'end': 1757354360 + i * 60})
+            prevCoreTime = 1757354360 + i * 60
+        
+        if (random.random() <= tempChangeChance):
+            oven.append({'max': curOvenTemp + 10, 'min': curOvenTemp - 10, 'start': prevOvenTime, 'end': 1757354360 + i * 60})
+            prevOvenTime = 1757354360 + i * 60
+    
+
+    lastTime = 1757354360 + (duration-1) * 60
+    if (len(core) == 0 or core[-1]['end'] != lastTime):
+            core.append({'max': curCoreTemp + 10, 'min': curCoreTemp - 10, 'start': prevCoreTime, 'end': lastTime})
+        
+    if (len(oven) == 0 or oven[-1]['end'] != lastTime):
+        oven.append({'max': curOvenTemp + 10, 'min': curOvenTemp - 10, 'start': prevOvenTime, 'end': lastTime})
+    
+    return jsonify({'temperature': temperatures, 'limit': {'core': core, 'oven': oven}})
