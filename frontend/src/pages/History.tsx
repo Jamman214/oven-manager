@@ -15,6 +15,34 @@ interface Box {
     start: number;
     end: number;
 }
+interface GraphDataState {
+    temps: DataPoint[];
+    coreBoxes: Box[];
+    ovenBoxes: Box[];
+}
+interface PrevGraphSelection {
+    prevSelectionStart: number | null;
+    prevSelectionEnd: number | null;
+}
+interface ConfirmedGraphSelection {
+    currentSelectionStart: number;
+    currentSelectionEnd: number;
+    currentSelectionConfirmed: true;
+}
+interface UnconfirmedGraphSelection {
+    currentSelectionStart: number | null;
+    currentSelectionEnd: number | null;
+    currentSelectionConfirmed: false;
+}
+type GraphState = (
+    GraphDataState & PrevGraphSelection & (
+        ConfirmedGraphSelection | UnconfirmedGraphSelection
+    )
+)
+interface TimeWindow {
+    start: number;
+    end: number;
+}
 
 
 const getEveryNthMerged = (arr: DataPoint[], n: number) => {
@@ -65,7 +93,7 @@ const getDataBetween = (arr: DataPoint[], start: number, end: number) => {
     const maxIndex = binSearch(arr, end, (x) => x.time, "ub");
     if (minIndex === null || maxIndex === null) return [];
     const numPoints = maxIndex - minIndex + 1;
-    const interval = Math.ceil(numPoints / 30)
+    const interval = Math.ceil(numPoints / 30);
     return getEveryNthMerged(arr.slice(minIndex, maxIndex + 1), interval)
 }
 
@@ -91,6 +119,14 @@ const getBoxesBetween = (arr: Box[], start: number, end: number) => {
     output[output.length-1].end = Math.min(output[output.length-1].end, end);
     return output;
 }
+
+const getStateBetween = <
+        T extends GraphDataState
+    >(graphState: T, window: TimeWindow) => ({
+        temps: getDataBetween(graphState.temps, window.start, window.end),
+        coreBoxes: getBoxesBetween(graphState.coreBoxes, window.start, window.end),
+        ovenBoxes: getBoxesBetween(graphState.ovenBoxes, window.start, window.end),
+    })
 
 type Formatter = (x: number) => string;
 
@@ -120,7 +156,7 @@ const allowableTicks: [number, "time"|"date"][] = [
     [1440, "date"], 
 ]
 
-const useZoomWindows = (duration: "hour" | "day" | "week", touchSelectEnabled: boolean) => {
+const useZoomedData = (duration: "hour" | "day" | "week", touchSelectEnabled: boolean) => {
     const [fetchedRawData, _isDataLoading, _dataError] = useGetJson(
         "/api/get/history",
         historyDataSchema,
@@ -130,26 +166,7 @@ const useZoomWindows = (duration: "hour" | "day" | "week", touchSelectEnabled: b
         { duration }
     );
 
-    const rawTemps = useMemo(() => fetchedRawData?.temperature || [], [fetchedRawData]);
-    const rawBoxes = useMemo(
-        () => ({
-            core: fetchedRawData?.limit?.core || [],
-            oven: fetchedRawData?.limit?.oven || []
-        }), [fetchedRawData]
-    );
-
-    const initialTemps = useMemo(
-        () => rawTemps.length !== 0
-            ? getDataBetween(rawTemps, rawTemps[0].time, rawTemps[rawTemps.length-1].time)
-            : [],
-        [rawTemps]
-    )
-    
-
-    const initialGraphState = {
-        temps: initialTemps,
-        coreBoxes: rawBoxes.core,
-        ovenBoxes: rawBoxes.oven,
+    const emptySelection = {
         prevSelectionStart: null,
         prevSelectionEnd: null,
         currentSelectionStart: null,
@@ -157,34 +174,47 @@ const useZoomWindows = (duration: "hour" | "day" | "week", touchSelectEnabled: b
         currentSelectionConfirmed: false
     } as const
 
-    const [graphState, setGraphState] = useState<(
-            {
-                temps: DataPoint[];
-                coreBoxes: Box[];
-                ovenBoxes: Box[];
-                prevSelectionStart: number | null;
-                prevSelectionEnd: number | null;
-            } & (
-                {
-                    currentSelectionStart: number | null;
-                    currentSelectionEnd: number | null;
-                    currentSelectionConfirmed: false;
-                } | {
-                    currentSelectionStart: number;
-                    currentSelectionEnd: number;
-                    currentSelectionConfirmed: true;
-                }
-            )
-        )>(initialGraphState);  
+    const rawData = useMemo(
+        () => {
+            const temps = fetchedRawData?.temperature || [];
+            const coreBoxes = fetchedRawData?.limit?.core || []
+            const ovenBoxes = fetchedRawData?.limit?.oven || []
+            return {temps, coreBoxes, ovenBoxes}
+        }, [fetchedRawData]
+    )
 
-    const zoomWindows = useRef<{start: number, end: number}[]>([])
-
-    const prevInitialData = useRef(rawTemps)
-    if (prevInitialData.current !== rawTemps) {
-        prevInitialData.current = rawTemps;
-        setGraphState(initialGraphState);
-        zoomWindows.current = []
+    const initialWindow = rawData.temps.length ? {
+        start: rawData.temps[0].time, 
+        end: rawData.temps[rawData.temps.length-1].time
+    } : {
+        start: 0,
+        end: 0
     }
+
+    const initialGraphState = useMemo(
+        () => {
+            let graphDataState = rawData;
+            if (rawData.temps.length > 0) {
+                graphDataState = getStateBetween(rawData, initialWindow);
+            }
+
+            return { 
+                ...graphDataState,
+                ...emptySelection
+            } as const
+        }, [fetchedRawData]
+    )
+
+    const [graphState, setGraphState] = useState<GraphState>(initialGraphState);  
+
+    const zoomHistory = useRef<{start: number, end: number}[]>([])
+
+    useEffect(
+        () => {
+            setGraphState(initialGraphState);
+            zoomHistory.current = []
+        }, [initialGraphState]
+    )
 
     const zoomIn = () => {
         const { 
@@ -200,36 +230,25 @@ const useZoomWindows = (duration: "hour" | "day" | "week", touchSelectEnabled: b
             : [currentSelectionEnd, currentSelectionStart]
 
         // Store selection data since averaging points makes the original selection unrecoverable
-        zoomWindows.current.push({start: selectionLeft, end: selectionRight})
+        const newWindow = {start: selectionLeft, end: selectionRight};
+        zoomHistory.current.push(newWindow);
 
         setGraphState({
-            temps: getDataBetween(rawTemps, selectionLeft, selectionRight),
-            coreBoxes: getBoxesBetween(rawBoxes.core, selectionLeft, selectionRight),
-            ovenBoxes: getBoxesBetween(rawBoxes.oven, selectionLeft, selectionRight),
-            prevSelectionStart: null,
-            prevSelectionEnd: null,
-            currentSelectionStart: null,
-            currentSelectionEnd: null,
-            currentSelectionConfirmed: false
+            ...getStateBetween(rawData, newWindow),
+            ...emptySelection
         });
     };
 
     const zoomOut = () => {
-        zoomWindows.current.pop() // remove current selection
+        zoomHistory.current.pop() // remove current selection
         // Get previous selection, or go back to rawData if there arent any
-        const prevWindow = zoomWindows.current.length === 0 
-            ? {start: rawTemps[0].time, end: rawTemps[rawTemps.length-1].time}
-            : zoomWindows.current[zoomWindows.current.length-1]
+        const prevWindow = zoomHistory.current.length === 0 
+            ? initialWindow
+            : zoomHistory.current[zoomHistory.current.length-1]
         if (!prevWindow) return;
         setGraphState({
-            temps: getDataBetween(rawTemps, prevWindow.start, prevWindow.end),
-            coreBoxes: getBoxesBetween(rawBoxes.core, prevWindow.start, prevWindow.end),
-            ovenBoxes: getBoxesBetween(rawBoxes.oven, prevWindow.start, prevWindow.end),
-            prevSelectionStart: null,
-            prevSelectionEnd: null,
-            currentSelectionStart: null,
-            currentSelectionEnd: null,
-            currentSelectionConfirmed: false
+            ...getStateBetween(rawData, prevWindow),
+            ...emptySelection
         });
     };
 
@@ -299,11 +318,7 @@ const useZoomWindows = (duration: "hour" | "day" | "week", touchSelectEnabled: b
                 ) {
                     return { 
                         ...prevState, 
-                        prevSelectionStart: null,
-                        prevSelectionEnd: null,
-                        currentSelectionStart: null, 
-                        currentSelectionEnd: null, 
-                        selectionConfirmed: false 
+                        ...emptySelection
                     }
                 }
                 // Needed to separate selectionStart, selectionEnd for type safety
@@ -351,17 +366,14 @@ function History() {
         selectionProps,
         zoomIn, 
         zoomOut
-    } = useZoomWindows(duration, touchSelectEnabled)
+    } = useZoomedData(duration, touchSelectEnabled)
 
     const chartRef = useRef<any>(null);
     const chartProps: ComponentProps<typeof LineChart> = {
         ...selectionProps,
         ref: chartRef,
-        onTouchEnd: (...args) => {
-            chartRef.current?.handleMouseLeave?.();
-            selectionProps?.onTouchEnd?.(...args); 
-        }
     }
+    
 
     const selectionChanging = 
         currentSelectionStart !== prevSelectionStart
@@ -408,6 +420,8 @@ function History() {
     const tickFormatter = (tickType === "time") 
         ? timeFormatter
         : dateFormatter
+    
+    console.log("rerender")
 
     return <>
         <div className="container">
@@ -443,7 +457,7 @@ function History() {
                         
                     />
                     <YAxis ticks={[0, 100, 200, 300, 400, 500]} width="auto"/>
-                    <Tooltip content={CustomTooltip}/>
+                    <Tooltip content={CustomTooltip} offset={20}/>
                     <Line 
                         name="Core"
                         type="monotone" 
@@ -485,14 +499,14 @@ function History() {
                     {
                         coreBoxes.map(
                             (box, i) => (
-                                <ReferenceArea ifOverflow="extendDomain" key={`${temps[0].time}${temps[temps.length-1].time}${i}`} x1={box.start} x2={box.end} y1={box.min} y2={box.max} stroke="red" strokeOpacity={selectionChanging ? 0 : 0.5} fill="red" fillOpacity={selectionChanging ? 0 : 0.3} />
+                                <ReferenceArea ifOverflow="extendDomain" key={`${temps[0].time}${temps[temps.length-1].time}${i}`} x1={box.start} x2={box.end} y1={box.min} y2={box.max} stroke="red" strokeOpacity={0.5} fill="red" fillOpacity={0.3} />
                             )
                         )
                     }
                     {
                         ovenBoxes.map(
                             (box, i) => (
-                                <ReferenceArea ifOverflow="extendDomain" key={`${temps[0].time}${temps[temps.length-1].time}${i}`} x1={box.start} x2={box.end} y1={box.min} y2={box.max} stroke="orange" strokeOpacity={selectionChanging ? 0 : 0.5} fill="orange" fillOpacity={selectionChanging ? 0 : 0.3} />
+                                <ReferenceArea ifOverflow="extendDomain" key={`${temps[0].time}${temps[temps.length-1].time}${i}`} x1={box.start} x2={box.end} y1={box.min} y2={box.max} stroke="orange" strokeOpacity={0.5} fill="orange" fillOpacity={0.3} />
                             )
                         )
                     }
