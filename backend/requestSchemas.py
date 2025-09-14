@@ -130,12 +130,18 @@ class WeekPresetSchemas():
             "name": _name,
             "preset": _presets
         }))
-    
-    
-    
+
+class CurrentPreset():
+    set_ = expected_keys(DictSchema({
+        'id': ConstraintSchema(
+            int,
+            filter_fn = lambda x: x >= 0
+        )
+    }))
 
 class requestSchemas():
     atomicPreset = AtomicPresetSchemas
     dayPreset = DayPresetSchemas
     weekPreset = WeekPresetSchemas
+    currentPreset = CurrentPreset
     

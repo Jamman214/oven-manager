@@ -46,13 +46,13 @@ db_presets = {
     'day': 
         [
             {
-                'id': 1,
+                'id': 3,
                 'name': "schedule1",
                 'preset': [1, 2, 1],
                 'time': [{'hour': 12, 'minute': 24}, {'hour': 23, 'minute': 12}]
             },
             {
-                'id': 2,
+                'id': 4,
                 'name': "schedule2",
                 'preset': [2],
                 'time': []
@@ -61,6 +61,8 @@ db_presets = {
     
     'week' : []
 }
+
+db_current_preset = {'id': 0}
 
 @app.route("/get/presets/atomic", methods=["GET"])
 def get_presets_atomic():
@@ -83,6 +85,13 @@ def get_presets_week():
         presets.append({'id': preset['id'], 'name': preset['name']})
     return jsonify(presets)
 
+@app.route("/get/presets/all", methods=["GET"])
+def get_presets_all():
+    presets = {'atomic': [], 'day': [], 'week': []}
+    for presetType in ['day', 'atomic', 'week']:
+        for preset in db_presets[presetType]:
+            presets[presetType].append({'id': preset['id'], 'name': preset['name']})
+    return jsonify(presets)
 
 @app.route("/get/preset/atomic", methods=["GET"])
 def get_preset_atomic():
@@ -116,6 +125,21 @@ def get_preset_week():
         if (preset['id'] == id):
             return jsonify(preset)
     return f'preset {id} does not exist', 404
+
+@app.route("/get/config", methods=["GET"])
+def get_config():
+
+    print("get", db_current_preset['id'])
+    return jsonify({'id': db_current_preset['id']})
+
+@app.route("/set/config", methods=["POST"])
+def set_config():
+    preset, error_message = validate_json_request(requestSchemas.currentPreset.set_, request)
+    if preset is None:
+        return error_message, 400
+    print("set", preset['id'])
+    db_current_preset['id'] = preset['id']
+    return '', 204
 
 
 @app.route("/create/preset/atomic", methods=["POST"])

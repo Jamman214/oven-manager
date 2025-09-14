@@ -109,7 +109,6 @@ def compare_json_types(schema: ConstrainedJson, json: Any) -> ValidationResult:
 
 def validate_json_request(schema: ConstrainedJson, 
                           request: Request) -> tuple[Json | None, str]:
-    print(schema.child.schema)
     if not request.is_json:
         return None, "Expected JSON"
     json = request.get_json()
