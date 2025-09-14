@@ -101,7 +101,8 @@ function NavBar({ brand, items }: NavBarProps) {
     // Also prevents animation from playing when screen gets smaller again
     useEffect(() => {
         function handleResize() {
-            if (window.innerWidth >= breakpoint_sm) {
+            const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+            if (window.innerWidth >= 28 * rem) {
                 // If the screen isn't small, unexpand it
                 setExpanded(false);
                 setBeenExpanded(false);

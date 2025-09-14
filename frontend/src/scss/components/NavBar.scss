@@ -1,7 +1,7 @@
 @import "../colours.scss";
 @import "../breakpoints.scss";
 
-$breakpoint: 28rem; // Magic number, should try to get rid of at some point
+$breakpoint: 28rem;
 $toggle-mode: $breakpoint;
 $link-mode: calc($breakpoint + 0.02px);
 $navbar-height: 4rem;
@@ -43,7 +43,7 @@ $navbar-height: 4rem;
 }
 
 .navbar-brand {    
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-xl);
     line-height: 1;
     color: $white;
     text-decoration: none;
@@ -52,7 +52,7 @@ $navbar-height: 4rem;
 }
 
 
-$toggle-size: calc(var(--font-size-lg) + (2 * var(--padding-sm)));
+$toggle-size: calc(var(--font-size-xl) + (2 * var(--padding-sm)));
 .navbar-toggle {
     display: inline-block;
     height: $toggle-size;
@@ -110,7 +110,7 @@ $toggle-size: calc(var(--font-size-lg) + (2 * var(--padding-sm)));
 
     display: flex;
 
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-lg);
     color: var(--text-color);
     text-decoration: none;
     line-height: 1.5;
@@ -157,6 +157,12 @@ $toggle-size: calc(var(--font-size-lg) + (2 * var(--padding-sm)));
     position: relative;
 }
 
+@media (min-width: $link-mode) {
+    .nav-item {
+        font-size: var(--font-size-md);
+    }
+}
+
 .expanded-nav-item {
     padding-left: var(--padding-md);
     z-index: 1;
@@ -167,6 +173,7 @@ $toggle-size: calc(var(--font-size-lg) + (2 * var(--padding-sm)));
 
         top: calc(var(--font-size-md) + var(--padding-sm));
 
+        margin-top: var(--padding-sm);
         padding: var(--padding-sm);
         border: 1px solid var(--border-color);
         border-radius: var(--border-radius);
