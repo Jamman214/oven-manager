@@ -331,3 +331,8 @@ $toggle-transform: $switch-width - (2 * ($toggle-radius + $switch-padding));
         
     }
 }
+
+.text {
+    padding: var(--padding-md);
+    color: var(--text-color);
+}
