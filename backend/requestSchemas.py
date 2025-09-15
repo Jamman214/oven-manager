@@ -139,7 +139,7 @@ class CurrentPreset():
         )
     }))
 
-class requestSchemas():
+class RequestSchemas():
     atomicPreset = AtomicPresetSchemas
     dayPreset = DayPresetSchemas
     weekPreset = WeekPresetSchemas

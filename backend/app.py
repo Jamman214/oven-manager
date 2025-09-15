@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from validateRequest import validate_json_request
 from time import sleep
 from dotenv import load_dotenv
-from requestSchemas import requestSchemas
+from requestSchemas import RequestSchemas
 import math
 import random
 
@@ -134,7 +134,7 @@ def get_config():
 
 @app.route("/set/config", methods=["POST"])
 def set_config():
-    preset, error_message = validate_json_request(requestSchemas.currentPreset.set_, request)
+    preset, error_message = validate_json_request(RequestSchemas.currentPreset.set_, request)
     if preset is None:
         return error_message, 400
     print("set", preset['id'])
@@ -144,7 +144,7 @@ def set_config():
 
 @app.route("/create/preset/atomic", methods=["POST"])
 def create_preset_atomic():
-    preset, error_message = validate_json_request(requestSchemas.atomicPreset.create, request)
+    preset, error_message = validate_json_request(RequestSchemas.atomicPreset.create, request)
     if preset is None:
         return error_message, 400
 
@@ -158,7 +158,7 @@ def create_preset_atomic():
 
 @app.route("/create/preset/day", methods=["POST"])
 def create_preset_day():
-    preset, error_message = validate_json_request(requestSchemas.dayPreset.create, request)
+    preset, error_message = validate_json_request(RequestSchemas.dayPreset.create, request)
     if preset is None:
         return error_message, 400
 
@@ -172,7 +172,7 @@ def create_preset_day():
 
 @app.route("/create/preset/week", methods=["POST"])
 def create_preset_week():
-    preset, error_message = validate_json_request(requestSchemas.weekPreset.create, request)
+    preset, error_message = validate_json_request(RequestSchemas.weekPreset.create, request)
     if preset is None:
         return error_message, 400
 
@@ -186,7 +186,7 @@ def create_preset_week():
 
 @app.route("/edit/preset/atomic", methods=["POST"])
 def edit_preset_atomic():
-    preset, error_message = validate_json_request(requestSchemas.atomicPreset.edit, request)
+    preset, error_message = validate_json_request(RequestSchemas.atomicPreset.edit, request)
     if preset is None:
         return error_message, 400
     
@@ -198,7 +198,7 @@ def edit_preset_atomic():
 
 @app.route("/edit/preset/day", methods=["POST"])
 def edit_preset_day():
-    preset, error_message = validate_json_request(requestSchemas.dayPreset.edit, request)
+    preset, error_message = validate_json_request(RequestSchemas.dayPreset.edit, request)
     if preset is None:
         return error_message, 400
     
@@ -210,7 +210,7 @@ def edit_preset_day():
 
 @app.route("/edit/preset/week", methods=["POST"])
 def edit_preset_week():
-    preset, error_message = validate_json_request(requestSchemas.weekPreset.edit, request)
+    preset, error_message = validate_json_request(RequestSchemas.weekPreset.edit, request)
     if preset is None:
         return error_message, 400
     
