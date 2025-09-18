@@ -1,0 +1,19 @@
+# Git and Docker specific files
+.git
+.gitignore
+.dockerignore
+docker-compose.yml
+
+# Python cache, virtual environment, and sensitive files
+__pycache__/
+.venv/
+.env*
+
+# Editor and OS specific files
+.vscode/
+.DS_Store
+
+# Scripts and batch files (unless needed in a build stage)
+*.sh
+*.bat
+!entrypoint.sh

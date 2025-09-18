@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    platform: linux/arm/v6
+    image: jamman214/oven-manager-backend:1.0.0
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - shared_data:/app/data
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    platform: linux/arm/v6
+    image: jamman214/oven-manager-frontend:1.0.0
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./scripts/Dockerfile
+    platform: linux/arm/v6
+    image: jamman214/oven-manager-worker:1.0.0
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - shared_data:/app/data
+
+volumes:
+  shared_data:

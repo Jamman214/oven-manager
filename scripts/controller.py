@@ -3,9 +3,10 @@ import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-def get_limits(cur, _time):
-    tz = ZoneInfo("Europe/London")
+db_path = "/app/data/temperatures_and_presets.db"
+tz = ZoneInfo("Europe/London")
 
+def get_limits(cur, _time):
     extract_active = """
         SELECT preset_id
         FROM preset_history
@@ -158,58 +159,62 @@ def set_relays(core_on, oven_on):
     pass
 
 con = None
-try:
-    con = sqlite3.connect(
-        "../app.db",
-        detect_types=sqlite3.PARSE_DECLTYPES
-    )
-    con.row_factory = sqlite3.Row
-    cur = con.cursor()
-    _time = int(time.time())
 
-    temps = get_temperatures()
-    limits = get_limits(cur, _time)
-    previous = get_previous(cur)
+while True:
+    try:
+        con = sqlite3.connect(
+            db_path,
+            detect_types=sqlite3.PARSE_DECLTYPES
+        )
+        con.row_factory = sqlite3.Row
+        cur = con.cursor()
+        _time = int(time.time())
 
-    # I used .get() here in case anything happens with the data consistency
-    # it just means it can continue to run and shut off peacefully 
-    # after inserting to the db
-    record = {
-        'time': _time,
-        'core': temps['core'],
-        'oven': temps['oven'],
-        'core_on': 
-            is_on(
-                limits.get('preset_id', 0),
-                temps['core'], 
-                limits.get('core_high', 0),
-                limits.get('core_low', 0),
-                previous['core_on']
-            ),
-        'oven_on': 
-            is_on(
-                limits.get('preset_id', 0),
-                temps['oven'], 
-                limits.get('oven_high', 0),
-                limits.get('oven_low', 0),
-                previous['oven_on']
-            )
-    }
+        temps = get_temperatures()
+        limits = get_limits(cur, _time)
+        previous = get_previous(cur)
 
-    insert_record(cur, record)
-    con.commit()
+        # I used .get() here in case anything happens with the data consistency
+        # it just means it can continue to run and shut off peacefully 
+        # after inserting to the db
+        record = {
+            'time': _time,
+            'core': temps['core'],
+            'oven': temps['oven'],
+            'core_on': 
+                is_on(
+                    limits.get('preset_id', 0),
+                    temps['core'], 
+                    limits.get('core_high', 0),
+                    limits.get('core_low', 0),
+                    previous['core_on']
+                ),
+            'oven_on': 
+                is_on(
+                    limits.get('preset_id', 0),
+                    temps['oven'], 
+                    limits.get('oven_high', 0),
+                    limits.get('oven_low', 0),
+                    previous['oven_on']
+                )
+        }
 
-    set_relays(record['core_on'], record['oven_on'])
+        insert_record(cur, record)
+        con.commit()
 
-except Exception as e:
-    # If any exception occurs, rollback and turn off the oven
-    if con:
-        con.rollback()
-    set_relays(False, False)
-    print("test")
+        set_relays(record['core_on'], record['oven_on'])
 
-finally:
-    if con:
-        con.close()
+    except Exception as e:
+        # If any exception occurs, rollback and turn off the oven
+        if con:
+            con.rollback()
+        set_relays(False, False)
+        print(e)
+
+    finally:
+        if con:
+            con.close()
+    
+    time.sleep(60)
 
     

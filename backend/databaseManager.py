@@ -8,12 +8,13 @@ import random
 
 class DatabaseManager():
     tz = ZoneInfo("Europe/London")
+    db_name = "/app/data/temperatures_and_presets.db"
 
     @staticmethod
     def init_db():
         if 'db' not in g:
             g.db = sqlite3.connect(
-                current_app.config['DATABASE'],
+                DatabaseManager.db_name,
                 detect_types=sqlite3.PARSE_DECLTYPES
             )
             g.db.row_factory = sqlite3.Row
@@ -22,7 +23,7 @@ class DatabaseManager():
     def get_db():
         if 'db' not in g:
             g.db = sqlite3.connect(
-                current_app.config['DATABASE'],
+                DatabaseManager.db_name,
                 detect_types=sqlite3.PARSE_DECLTYPES,
                 autocommit=False
             )
