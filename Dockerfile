@@ -1,41 +1,49 @@
-# Base image
-FROM ubuntu:20.04
+# Base image optimized for Raspberry Pi Zero W (ARMv6)
+FROM arm32v6/alpine:latest
 
 # Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
 
-# Install dependencies
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip nginx curl git
+# Install runtime dependencies
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    nginx \
+    py3-flask \
+    py3-requests \
+    py3-jinja2 \
+    && ln -sf python3 /usr/bin/python
 
-RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs
-
-# Install Vite (if using npm)
-RUN npm install -g vite
-
-# Set the working directory for the React app and server
+# Set the working directory
 WORKDIR /app
 
-# Copy the application code
-COPY . /app
+# Copy Python requirements first for better caching
+COPY backend/requirements.txt /app/backend/requirements.txt
 
-# Install Python dependencies (for Flask)
-RUN pip3 install -r backend/requirements.txt
+# Install remaining Python dependencies
+# Alpine packages are pre-compiled for ARM, avoiding compilation issues
+RUN pip3 install --no-cache-dir --break-system-packages \
+    --find-links https://www.piwheels.org/simple/ \
+    -r backend/requirements.txt
 
-# Build React app using Vite
-WORKDIR /app/frontend
-RUN npm install && npm run build
+# Copy the rest of the backend code
+COPY backend/ /app/backend/
 
-# Configure Nginx
+# Copy the pre-built React app to nginx serving directory
+COPY frontend/dist/ /usr/share/nginx/html/
+
+# Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Expose Flask server and Nginx ports
-EXPOSE 5000 80
-
-# Set entrypoint script for running both Flask and Nginx
+# Copy entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+# Create nginx run directory
+RUN mkdir -p /run/nginx
+
+# Expose ports
+EXPOSE 5000 80
 
 # Run entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
