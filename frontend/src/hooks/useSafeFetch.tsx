@@ -42,7 +42,7 @@ function useSafeFetch<T>(
         okResponseHandler, 
         dependencies = [], 
         requirements, 
-        dataCompiler = (prev, next) => next,
+        dataCompiler = (_prev, next) => next,
         resetDataOnFetch = false
     } : {
         init?: Omit<FetchInit, "signal">,

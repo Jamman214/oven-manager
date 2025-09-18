@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useCallback, useEffect, type ComponentProps } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, type TooltipContentProps, Legend, ResponsiveContainer, ReferenceArea } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, type TooltipContentProps, ResponsiveContainer, ReferenceArea } from 'recharts';
 import { useGetJson } from "../hooks/useGetJSON";
 import { historyDataSchema } from "../../validation/history"
 import type { CategoricalChartFunc } from "recharts/types/chart/types";
@@ -323,7 +323,7 @@ const useZoomedData = (duration: "hour" | "day" | "week", touchSelectEnabled: bo
         )
     }
 
-    const selectionEndHandler: CategoricalChartFunc = (e) => {
+    const selectionEndHandler: CategoricalChartFunc = () => {
         setGraphState(
             prevState => {
                 if (prevState.currentSelectionConfirmed) return prevState;
@@ -515,14 +515,14 @@ function History() {
                     />
                     {
                         coreBoxes.map(
-                            (box, i) => (
+                            (box) => (
                                 <ReferenceArea ifOverflow="extendDomain" key={`${box.start}`} x1={box.start} x2={box.end} y1={box.min} y2={box.max} stroke="red" strokeOpacity={0.5} fill="red" fillOpacity={0.3} />
                             )
                         )
                     }
                     {
                         ovenBoxes.map(
-                            (box, i) => (
+                            (box) => (
                                 <ReferenceArea ifOverflow="extendDomain" key={`${box.start}`} x1={box.start} x2={box.end} y1={box.min} y2={box.max} stroke="orange" strokeOpacity={0.5} fill="orange" fillOpacity={0.3} />
                             )
                         )

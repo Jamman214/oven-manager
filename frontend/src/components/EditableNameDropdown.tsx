@@ -10,7 +10,7 @@ import { z } from "zod";
 
 // Fetches the list of names + ids whenever a preset is saved/edited
 function usePresets(route: string, modifiedCount: number) {
-    const [presets, isPresetsLoading, presetsError] = useGetJson(
+    const [presets, _isPresetsLoading, _presetsError] = useGetJson(
         route,
         z.array(z.object({
             "id": z.number(),
@@ -32,10 +32,8 @@ interface Props {
 
 function EditableNameDropdown({ refreshOnChange, namesRoute, selectHandler }: Props) {
     const {
-        reset,
         formState: { errors, touchedFields, isSubmitted },
         register,
-        setValue
     } = useFormContext<{id: number, name: string}>();
 
     // list of available presets

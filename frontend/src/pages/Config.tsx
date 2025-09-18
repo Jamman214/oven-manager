@@ -1,10 +1,9 @@
 import {
-    formSchema, apiSchema, toApi, fromApi, initialFormValues, allPresetsSchema, type FormInput, type FormOutput, type ApiInput, type ApiOutput
+    formSchema, apiSchema, toApi, fromApi, initialFormValues, allPresetsSchema, type FormInput, type FormOutput, type ApiInput
 } from "../../validation/config.tsx"
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
     useForm, 
-    useFormContext,
     FormProvider
 } from "react-hook-form";
 import { useGetJson } from "../hooks/useGetJSON.tsx";
@@ -12,7 +11,7 @@ import { usePostJson } from "../hooks/usePostJSON.tsx";
 
 import { useMemo, useEffect, useState } from "react";
 
-import { SubmitButton, type SubmitAction } from "../components/SubmitButton.tsx";
+import { SubmitButton } from "../components/SubmitButton.tsx";
 
 interface Preset {
     id: number;
@@ -41,7 +40,7 @@ function PresetGroup ({label, presets}: PresetGroupProps) {
 }
 
 function Config() {
-    const [rawPresets, presetsLoading, presetsError] = useGetJson(
+    const [rawPresets, _presetsLoading, _presetsError] = useGetJson(
         "/api/get/presets/all",
         allPresetsSchema
     )
@@ -51,7 +50,7 @@ function Config() {
         [rawPresets]
     )
 
-    const [rawCurrentPreset, currentPresetLoading, currentPresetError] = useGetJson(
+    const [rawCurrentPreset, _currentPresetLoading, _currentPresetError] = useGetJson(
         "/api/get/config",
         apiSchema
     )
@@ -76,7 +75,7 @@ function Config() {
         mode: "onBlur",
     })
 
-    const { handleSubmit, setValue, reset, formState: {isSubmitting}, register} = methods;
+    const { handleSubmit, reset, register} = methods;
 
     const [submitData, setSubmitData] = useState<ApiInput | null>(null)
     const submitFunc = (formOutput: FormOutput) => setSubmitData(toApi(formOutput))
