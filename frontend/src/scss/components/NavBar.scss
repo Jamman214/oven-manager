@@ -116,6 +116,7 @@ $toggle-size: calc(var(--font-size-xl) + (2 * var(--padding-sm)));
     line-height: 1.5;
 
     background: none;
+    -webkit-tap-highlight-color: transparent;
 
     &.expandable {
         padding-right: var(--padding-xs);
