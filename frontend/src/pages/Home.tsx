@@ -2,18 +2,18 @@
 function Home() {
     return (
         <div className="text">
-            This is an website for monitoring and controlling my AGA oven. <br/><br/>
+            This is dashboard for monitoring and controlling an AGA oven.<br/><br/>
     
             <b><u>Page Descriptions:</u></b><br/>
             <ul>
                 <li>
                     <b><u>Config:</u></b><br/>
-                    This is where the AGA can be set to follow a single preset.
+                    This is where the AGA's temperature can be set to a preset.
                 </li>
                 <br/>
                 <li>
                     <b><u>Presets:</u></b><br/>
-                    This is where you can create or edit any of the three following types of preset:
+                    This is where each of the three preset types can be created:
                     <ul>
                         <br/>
                         <li>
@@ -35,7 +35,7 @@ function Home() {
                 <br/>
                 <li>
                     <b><u>History:</u></b><br/>
-                    This is where past temperatures can be viewed alongside the target temperatures at the time. You can zoom in on a specific time by selecting an area then using the buttons.
+                    This is where you can view the temperature and preset at any point within the last week.
                 </li>
                 <br/>
             </ul>
