@@ -75,12 +75,26 @@ class DayPresetSchemas():
         int,
         filter_fn = lambda x: x >= 1
     )
+
+    def is_ordered(times):
+        for i in range(len(times)-1):
+            if (
+                times[i]['hour'] > times[i+1]['hour']
+                or (
+                    times[i]['hour'] == times[i+1]['hour']
+                    and times[i]['minute'] >= times[i+1]['minute']
+                )
+            ):
+                return False
+        return True
+
+    _time_list = ConstraintSchema(ListSchema(_time), filter_fn=is_ordered)
    
     create = ConstraintSchema(
         expected_keys(DictSchema({
             "name": _name,
             "preset": ListSchema(_preset),
-            "time": ListSchema(_time)
+            "time": _time_list
         })),
         filter_fn = lambda x: len(x['preset']) == len(x['time']) + 1
     )
@@ -90,7 +104,7 @@ class DayPresetSchemas():
             "id": _id,
             "name": _name,
             "preset": ListSchema(_preset),
-            "time": ListSchema(_time)
+            "time": _time_list
         })),
         filter_fn = lambda x: len(x['preset']) == len(x['time']) + 1
     )

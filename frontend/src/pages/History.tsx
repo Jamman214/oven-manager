@@ -8,6 +8,8 @@ interface DataPoint {
     core: number;
     oven: number;
     time: number;
+    coreOn: boolean;
+    ovenOn: boolean;
 }
 interface Box {
     max: number;
@@ -15,10 +17,17 @@ interface Box {
     start: number;
     end: number;
 }
+
+interface TimeWindow {
+    start: number;
+    end: number;
+}
+
 interface GraphDataState {
-    temps: DataPoint[];
+    data: DataPoint[];
     coreBoxes: Box[];
     ovenBoxes: Box[];
+    domain: TimeWindow;
 }
 interface PrevGraphSelection {
     prevSelectionStart: number | null;
@@ -39,10 +48,6 @@ type GraphState = (
         ConfirmedGraphSelection | UnconfirmedGraphSelection
     )
 )
-interface TimeWindow {
-    start: number;
-    end: number;
-}
 
 
 const getEveryNthMerged = (arr: DataPoint[], n: number) => {
@@ -52,13 +57,25 @@ const getEveryNthMerged = (arr: DataPoint[], n: number) => {
         let timeTotal = 0
         let coreTotal = 0
         let ovenTotal = 0
+        let coreOnTotal = 0
+        let ovenOnTotal = 0
         let j=0;
         for (j=0; j<n && i+j < arr.length; j++) {
             timeTotal += arr[i+j].time;
             coreTotal += arr[i+j].core;
             ovenTotal += arr[i+j].oven;
+            coreOnTotal += arr[i+j].coreOn ? 1 : 0;
+            ovenOnTotal += arr[i+j].ovenOn ? 1 : 0;
         }
-        output.push({time: timeTotal / j, core: coreTotal / j, oven: ovenTotal / j});
+
+        output.push({
+            time: timeTotal / j, 
+            core: coreTotal / j, 
+            oven: ovenTotal / j,
+            coreOn: Boolean(Math.round(coreOnTotal / j)),
+            ovenOn: Boolean(Math.round(ovenOnTotal / j))
+        });
+
     }
     return output;
 }
@@ -123,21 +140,27 @@ const getBoxesBetween = (arr: Box[], start: number, end: number) => {
 const getStateBetween = <
         T extends GraphDataState
     >(graphState: T, window: TimeWindow) => ({
-        temps: getDataBetween(graphState.temps, window.start, window.end),
+        data: getDataBetween(graphState.data, window.start, window.end),
         coreBoxes: getBoxesBetween(graphState.coreBoxes, window.start, window.end),
         ovenBoxes: getBoxesBetween(graphState.ovenBoxes, window.start, window.end),
+        domain: window,
     })
 
 type Formatter = (x: number) => string;
 
-function CustomTooltip({ active, payload, label }: TooltipContentProps<number, number>) {
-    const formatter: Formatter = (unixTime: number) => new Date(unixTime).toLocaleString()
+function CustomTooltip({ active, payload, label }: TooltipContentProps<number, number>) {    
     const isVisible = active && payload && payload.length;
-    return isVisible && typeof label === "number" && (
+    if (!isVisible) return null;
+
+    const data: DataPoint = payload[0].payload;
+    const formatter: Formatter = (unixTime: number) => new Date(unixTime).toLocaleString('en-GB', {timeZone: 'Europe/London'})
+    const isOn = (on: boolean) => on ? "On" : "Off";
+
+    return typeof label === "number" && (
         <div className="custom-tooltip" style={{ visibility: isVisible ? 'visible' : 'hidden' }}>
             <h1>{formatter(label)}</h1>
-            <p><b>Core:</b> {payload[0].value.toFixed(2)}°C</p>
-            <p><b>Oven:</b> {payload[1].value.toFixed(2)}°C</p>
+            <p><b>Core:</b> {data.core.toFixed(2)}°C - {isOn(data.coreOn)}</p>
+            <p><b>Oven:</b> {data.oven.toFixed(2)}°C - {isOn(data.coreOn)}</p>
         </div>
     );
 };
@@ -176,26 +199,22 @@ const useZoomedData = (duration: "hour" | "day" | "week", touchSelectEnabled: bo
 
     const rawData = useMemo(
         () => {
-            const temps = fetchedRawData?.temperature || [];
-            const coreBoxes = fetchedRawData?.limit?.core || []
-            const ovenBoxes = fetchedRawData?.limit?.oven || []
-            return {temps, coreBoxes, ovenBoxes}
+            const data = fetchedRawData?.data || [];
+            const coreBoxes = fetchedRawData?.limit?.core || [];
+            const ovenBoxes = fetchedRawData?.limit?.oven || [];
+            const domain = {
+                start: fetchedRawData?.start || 0,
+                end: fetchedRawData?.end || 0
+            }
+            return {data, coreBoxes, ovenBoxes, domain}
         }, [fetchedRawData]
     )
-
-    const initialWindow = rawData.temps.length ? {
-        start: rawData.temps[0].time, 
-        end: rawData.temps[rawData.temps.length-1].time
-    } : {
-        start: 0,
-        end: 0
-    }
 
     const initialGraphState = useMemo(
         () => {
             let graphDataState = rawData;
-            if (rawData.temps.length > 0) {
-                graphDataState = getStateBetween(rawData, initialWindow);
+            if (rawData.data.length > 0) {
+                graphDataState = getStateBetween(rawData, rawData.domain);
             }
 
             return { 
@@ -243,7 +262,7 @@ const useZoomedData = (duration: "hour" | "day" | "week", touchSelectEnabled: bo
         zoomHistory.current.pop() // remove current selection
         // Get previous selection, or go back to rawData if there arent any
         const prevWindow = zoomHistory.current.length === 0 
-            ? initialWindow
+            ? rawData.domain
             : zoomHistory.current[zoomHistory.current.length-1]
         if (!prevWindow) return;
         setGraphState({
@@ -354,9 +373,10 @@ function History() {
     const [touchSelectEnabled, setTouchSelectEnabled] = useState(false);
     const {
         graphState : {
-            temps,
+            data,
             coreBoxes,
             ovenBoxes,
+            domain,
             currentSelectionStart,
             currentSelectionEnd,
             prevSelectionStart,
@@ -412,17 +432,15 @@ function History() {
         return [output, axisType] as const
     }
 
-    const dateFormatter = useCallback((unixTime: number) => new Date(unixTime).toLocaleDateString(), [])
-    const timeFormatter = useCallback((unixTime: number) => new Date(unixTime).toLocaleTimeString(), [])
+    const dateFormatter = useCallback((unixTime: number) => new Date(unixTime).toLocaleDateString('en-GB', {timeZone: 'Europe/London'}), [])
+    const timeFormatter = useCallback((unixTime: number) => new Date(unixTime).toLocaleTimeString('en-GB', {timeZone: 'Europe/London'}), [])
 
-    const [xTicks, tickType] = useMemo(() => genTimeTicks(temps), [temps]);
+    const [xTicks, tickType] = useMemo(() => genTimeTicks(data), [data]);
 
     const tickFormatter = (tickType === "time") 
         ? timeFormatter
         : dateFormatter
     
-    console.log("rerender")
-
     return <>
         <div className="container">
             <div className="buttonGroup spaceBelow">
@@ -434,7 +452,7 @@ function History() {
             </div>
             <ResponsiveContainer width="100%" height={300}>
                 <LineChart
-                    data={temps}
+                    data={data}
                     margin={{
                         top: 0,
                         right: 0,
@@ -447,14 +465,13 @@ function History() {
                     <XAxis
                         allowDataOverflow
                         dataKey="time"
-                        domain={["dataMin", "dataMax"]}
+                        domain={[domain.start, domain.end]}
                         type="number"
                         scale="time"
                         ticks={xTicks}
                         tickFormatter={tickFormatter}
                         minTickGap={30}
                         tickMargin={10}
-                        
                     />
                     <YAxis ticks={[0, 100, 200, 300, 400, 500]} width="auto"/>
                     <Tooltip content={CustomTooltip} offset={20}/>
@@ -499,14 +516,14 @@ function History() {
                     {
                         coreBoxes.map(
                             (box, i) => (
-                                <ReferenceArea ifOverflow="extendDomain" key={`${temps[0].time}${temps[temps.length-1].time}${i}`} x1={box.start} x2={box.end} y1={box.min} y2={box.max} stroke="red" strokeOpacity={0.5} fill="red" fillOpacity={0.3} />
+                                <ReferenceArea ifOverflow="extendDomain" key={`${box.start}`} x1={box.start} x2={box.end} y1={box.min} y2={box.max} stroke="red" strokeOpacity={0.5} fill="red" fillOpacity={0.3} />
                             )
                         )
                     }
                     {
                         ovenBoxes.map(
                             (box, i) => (
-                                <ReferenceArea ifOverflow="extendDomain" key={`${temps[0].time}${temps[temps.length-1].time}${i}`} x1={box.start} x2={box.end} y1={box.min} y2={box.max} stroke="orange" strokeOpacity={0.5} fill="orange" fillOpacity={0.3} />
+                                <ReferenceArea ifOverflow="extendDomain" key={`${box.start}`} x1={box.start} x2={box.end} y1={box.min} y2={box.max} stroke="orange" strokeOpacity={0.5} fill="orange" fillOpacity={0.3} />
                             )
                         )
                     }

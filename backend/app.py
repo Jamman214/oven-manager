@@ -1,97 +1,52 @@
 from flask import Flask, request, jsonify
 from validateRequest import validate_json_request
-from time import sleep
 from dotenv import load_dotenv
 from requestSchemas import RequestSchemas
-import math
-import random
+from databaseManager import DatabaseManager, PresetManager
+import sqlite3
+import time
 
 app = Flask(__name__)
 load_dotenv()
 app.config.from_prefixed_env()
+app.cli.add_command(DatabaseManager.init_db)
+app.cli.add_command(DatabaseManager.populate_db)
 
-db_presets = {
-    'atomic': 
-        [
-            {
-                'id': 1,
-                'name': "preset1",
-                'temperature': {
-                    'core': {
-                        'high': 150,
-                        'low': 140
-                    },
-                    'oven': {
-                        'high': 90,
-                        'low': 80
-                    }
-                }
-            },
-            {
-                'id': 2,
-                'name': "preset2",
-                'temperature': {
-                    'core': {
-                        'high': 310,
-                        'low': 270
-                    },
-                    'oven': {
-                        'high': 160,
-                        'low': 145
-                    }
-                }
-            }
-        ],  
-
-    'day': 
-        [
-            {
-                'id': 3,
-                'name': "schedule1",
-                'preset': [1, 2, 1],
-                'time': [{'hour': 12, 'minute': 24}, {'hour': 23, 'minute': 12}]
-            },
-            {
-                'id': 4,
-                'name': "schedule2",
-                'preset': [2],
-                'time': []
-            }
-        ],
-    
-    'week' : []
-}
-
-db_current_preset = {'id': 0}
+@app.teardown_appcontext
+def teardown_db(e=None):
+    DatabaseManager.close_db()
 
 @app.route("/get/presets/atomic", methods=["GET"])
 def get_presets_atomic():
-    presets = []
-    for preset in db_presets['atomic']:
-        presets.append({'id': preset['id'], 'name': preset['name']})
+    presets = PresetManager.get_atomic_presets()
     return jsonify(presets)
 
 @app.route("/get/presets/day", methods=["GET"])
 def get_presets_day():
-    presets = []
-    for preset in db_presets['day']:
-        presets.append({'id': preset['id'], 'name': preset['name']})
+    presets = PresetManager.get_day_presets()
     return jsonify(presets)
 
 @app.route("/get/presets/week", methods=["GET"])
 def get_presets_week():
-    presets = []
-    for preset in db_presets['week']:
-        presets.append({'id': preset['id'], 'name': preset['name']})
+    presets = PresetManager.get_week_presets()
     return jsonify(presets)
 
 @app.route("/get/presets/all", methods=["GET"])
 def get_presets_all():
-    presets = {'atomic': [], 'day': [], 'week': []}
-    for presetType in ['day', 'atomic', 'week']:
-        for preset in db_presets[presetType]:
-            presets[presetType].append({'id': preset['id'], 'name': preset['name']})
+    atomic_presets = PresetManager.get_atomic_presets()
+    day_presets = PresetManager.get_day_presets()
+    week_presets = PresetManager.get_week_presets()
+    presets = {
+        'atomic': atomic_presets,
+        'day': day_presets,
+        'week': week_presets
+    }
     return jsonify(presets)
+
+
+
+
+
 
 @app.route("/get/preset/atomic", methods=["GET"])
 def get_preset_atomic():
@@ -99,10 +54,11 @@ def get_preset_atomic():
     if (not id) or (id < 1):
         return "Invalid id", 400
 
-    for preset in db_presets['atomic']:
-        if (preset['id'] == id):
-            return jsonify(preset)
-    return f'preset {id} does not exist', 404
+    try:
+        preset = PresetManager.get_atomic_preset(id)
+        return jsonify(preset)
+    except Exception as e:
+        return f"Encountered error {e}"
 
 @app.route("/get/preset/day", methods=["GET"])
 def get_preset_day():
@@ -110,10 +66,11 @@ def get_preset_day():
     if (not id) or (id < 1):
         return "Invalid id", 400
 
-    for preset in db_presets['day']:
-        if (preset['id'] == id):
-            return jsonify(preset)
-    return f'preset {id} does not exist', 404
+    try:
+        preset = PresetManager.get_day_preset(id)
+        return jsonify(preset)
+    except Exception as e:
+        return f"Encountered error {e}"
 
 @app.route("/get/preset/week", methods=["GET"])
 def get_preset_week():
@@ -121,111 +78,111 @@ def get_preset_week():
     if (not id) or (id < 1):
         return "Invalid id", 400
 
-    for preset in db_presets['week']:
-        if (preset['id'] == id):
-            return jsonify(preset)
-    return f'preset {id} does not exist', 404
+    try:
+        preset = PresetManager.get_week_preset(id)
+        return jsonify(preset)
+    except Exception as e:
+        return f"Encountered error {e}"
+
+
+
+
+
 
 @app.route("/get/config", methods=["GET"])
 def get_config():
-
-    print("get", db_current_preset['id'])
-    return jsonify({'id': db_current_preset['id']})
+    presets = PresetManager.get_active()
+    return jsonify(presets)
 
 @app.route("/set/config", methods=["POST"])
 def set_config():
-    preset, error_message = validate_json_request(RequestSchemas.currentPreset.set_, request)
-    if preset is None:
+    api_id, error_message = validate_json_request(RequestSchemas.currentPreset.set_, request)
+    if api_id is None:
         return error_message, 400
-    print("set", preset['id'])
-    db_current_preset['id'] = preset['id']
-    return '', 204
 
+    try:
+        PresetManager.set_active(api_id['id'])
+        return "Success", 201
+    except sqlite3.Error as e:
+        return f"Transaction Failed {e}", 500
+
+
+
+
+
+def handle_preset_data(api_schema, format_func, db_func):
+    api_preset, error_message = validate_json_request(api_schema, request)
+    if api_preset is None:
+        return error_message, 400
+    
+    preset_id, db_preset = format_func(api_preset)
+    try:
+        if preset_id is None:
+            db_func(db_preset)
+        else:
+            db_func(preset_id, db_preset)
+        return "Success", 201
+    except sqlite3.Error as e:
+        return f"Transaction Failed {e}", 500
 
 @app.route("/create/preset/atomic", methods=["POST"])
 def create_preset_atomic():
-    preset, error_message = validate_json_request(RequestSchemas.atomicPreset.create, request)
-    if preset is None:
-        return error_message, 400
-
-    max_id = 0
-    for existing_preset in db_presets['atomic']:
-        max_id = max(max_id, existing_preset['id'])
-    preset['id'] = max_id + 1
-    db_presets['atomic'].append(preset)
-
-    return "Success", 200
+    return handle_preset_data(
+        api_schema = RequestSchemas.atomicPreset.create, 
+        format_func = PresetManager.format_from_api_atomic_preset, 
+        db_func = PresetManager.create_atomic_preset
+    )
 
 @app.route("/create/preset/day", methods=["POST"])
 def create_preset_day():
-    preset, error_message = validate_json_request(RequestSchemas.dayPreset.create, request)
-    if preset is None:
-        return error_message, 400
-
-    max_id = 0
-    for existing_preset in db_presets['day']:
-        max_id = max(max_id, existing_preset['id'])
-    preset['id'] = max_id + 1
-    db_presets['day'].append(preset)
-
-    return "Success", 200
+    return handle_preset_data(
+        api_schema = RequestSchemas.dayPreset.create,
+        format_func = PresetManager.format_from_api_day_preset, 
+        db_func = PresetManager.create_day_preset
+    )
 
 @app.route("/create/preset/week", methods=["POST"])
 def create_preset_week():
-    preset, error_message = validate_json_request(RequestSchemas.weekPreset.create, request)
-    if preset is None:
-        return error_message, 400
-
-    max_id = 0
-    for existing_preset in db_presets['week']:
-        max_id = max(max_id, existing_preset['id'])
-    preset['id'] = max_id + 1
-    db_presets['week'].append(preset)
-
-    return "Success", 200
+    return handle_preset_data(
+        api_schema = RequestSchemas.weekPreset.create,
+        format_func = PresetManager.format_from_api_week_preset, 
+        db_func = PresetManager.create_week_preset
+    )
 
 @app.route("/edit/preset/atomic", methods=["POST"])
 def edit_preset_atomic():
-    preset, error_message = validate_json_request(RequestSchemas.atomicPreset.edit, request)
-    if preset is None:
-        return error_message, 400
-    
-    for i, existing_preset in enumerate(db_presets['atomic']):
-        if (existing_preset['id'] == preset['id']):
-            db_presets['atomic'][i] = preset # Need to ensure this doesnt contain additional fields
-            return "Success", 200
-    return f'preset {id} does not exist', 404
+    return handle_preset_data(
+        api_schema = RequestSchemas.atomicPreset.edit, 
+        format_func = PresetManager.format_from_api_atomic_preset, 
+        db_func = PresetManager.update_atomic_preset
+    )
 
 @app.route("/edit/preset/day", methods=["POST"])
 def edit_preset_day():
-    preset, error_message = validate_json_request(RequestSchemas.dayPreset.edit, request)
-    if preset is None:
-        return error_message, 400
-    
-    for i, existing_preset in enumerate(db_presets['day']):
-        if (existing_preset['id'] == preset['id']):
-            db_presets['day'][i] = preset # Need to ensure this doesnt contain additional fields
-            return "Success", 200
-    return f'preset {id} does not exist', 404
+    return handle_preset_data(
+        api_schema = RequestSchemas.dayPreset.edit,
+        format_func = PresetManager.format_from_api_day_preset, 
+        db_func = PresetManager.update_day_preset
+    )
 
 @app.route("/edit/preset/week", methods=["POST"])
 def edit_preset_week():
-    preset, error_message = validate_json_request(RequestSchemas.weekPreset.edit, request)
-    if preset is None:
-        return error_message, 400
-    
-    for i, existing_preset in enumerate(db_presets['week']):
-        if (existing_preset['id'] == preset['id']):
-            db_presets['week'][i] = preset # Need to ensure this doesnt contain additional fields
-            return "Success", 200
-    return f'preset {id} does not exist', 404
+    return handle_preset_data(
+        api_schema = RequestSchemas.weekPreset.edit,
+        format_func = PresetManager.format_from_api_week_preset, 
+        db_func = PresetManager.update_week_preset
+    )
+
+
+
+
 
 @app.route("/get/history", methods=["GET"])
 def get_history_day():
     durationMap = {
-        'hour': 60,
-        'day': 24 * 60,
-        'week': 7 * 24 * 60
+        'hour': 60 * 60,
+        'day': 24 * 60 * 60,
+        'week': 7 * 24 * 60 * 60
     }
 
     duration = request.args.get('duration', type=str)
@@ -233,50 +190,7 @@ def get_history_day():
         return "Invalid duration", 400
     
     duration = durationMap[duration]
+    now = int(time.time())
 
-    def genNew(num):
-        newNum = 0
-        if (num > 400):
-            newNum = num + math.floor(random.random() * 40 - 25)
-        elif (num > 100):
-            newNum = num + math.floor(random.random() * 40 - 20)
-        else:
-            newNum = num + math.floor(random.random() * 40 - 15)
-        
-        return max(0, min(500, newNum))
-    
-    temperatures = []
-    core = []
-    oven = []
-    curCoreTemp = 200
-    curOvenTemp = 200
-    prevCoreTime = 1757354360
-    prevOvenTime = 1757354360
-
-    tempChangeChance = 0.001
-
-    for i in range(0, duration):
-        curCoreTemp = genNew(curCoreTemp)
-        curOvenTemp = genNew(curOvenTemp)
-        temperatures.append({
-            'core': curCoreTemp,
-            'oven': curOvenTemp,
-            'time': 1757354360 + i * 60,
-        })
-        if (random.random() <= tempChangeChance):
-            core.append({'max': curCoreTemp + 10, 'min': curCoreTemp - 10, 'start': prevCoreTime, 'end': 1757354360 + i * 60})
-            prevCoreTime = 1757354360 + i * 60
-        
-        if (random.random() <= tempChangeChance):
-            oven.append({'max': curOvenTemp + 10, 'min': curOvenTemp - 10, 'start': prevOvenTime, 'end': 1757354360 + i * 60})
-            prevOvenTime = 1757354360 + i * 60
-    
-
-    lastTime = 1757354360 + (duration-1) * 60
-    if (len(core) == 0 or core[-1]['end'] != lastTime):
-            core.append({'max': curCoreTemp + 10, 'min': curCoreTemp - 10, 'start': prevCoreTime, 'end': lastTime})
-        
-    if (len(oven) == 0 or oven[-1]['end'] != lastTime):
-        oven.append({'max': curOvenTemp + 10, 'min': curOvenTemp - 10, 'start': prevOvenTime, 'end': lastTime})
-    
-    return jsonify({'temperature': temperatures, 'limit': {'core': core, 'oven': oven}})
+    history = PresetManager.get_history(now-duration, now)
+    return jsonify(history)

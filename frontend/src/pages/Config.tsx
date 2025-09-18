@@ -23,8 +23,6 @@ interface PresetGroupProps {
     presets: Preset[];
 }
 function PresetGroup ({label, presets}: PresetGroupProps) {
-    const {setValue} = useFormContext<FormInput>();
-
     if (!presets.length) return null;
     return <optgroup label={label}>
         {
@@ -63,18 +61,22 @@ function Config() {
         [rawCurrentPreset]
     )
 
+    const [formStateLoaded, setFormStateLoaded] = useState(false)
+
+    useEffect(
+        () => {
+            reset(currentPreset)
+            rawPresets && rawCurrentPreset && setFormStateLoaded(true);
+        }, [rawPresets, rawCurrentPreset]
+    )
+
     const methods = useForm<FormInput, unknown, FormOutput>({
         resolver: zodResolver(formSchema),
-        defaultValues: currentPreset,
+        values: currentPreset,
         mode: "onBlur",
     })
 
     const { handleSubmit, setValue, reset, formState: {isSubmitting}, register} = methods;
-
-    useEffect(
-        () => {reset(currentPreset)}, 
-        [currentPreset]
-    )
 
     const [submitData, setSubmitData] = useState<ApiInput | null>(null)
     const submitFunc = (formOutput: FormOutput) => setSubmitData(toApi(formOutput))
@@ -101,10 +103,14 @@ function Config() {
                     <fieldset>
                         <legend className="group-label">Active Preset</legend>
                         <select {...register("id")}>
-                            <option value="0">Off</option> 
-                            <PresetGroup label="Atomic" presets={presets?.atomic}/>
-                            <PresetGroup label="Day" presets={presets?.day}/>
-                            <PresetGroup label="Week" presets={presets?.week}/>
+                            {
+                                formStateLoaded && <>
+                                <option value="0">Off</option> 
+                                <PresetGroup label="Atomic" presets={presets?.atomic}/>
+                                <PresetGroup label="Day" presets={presets?.day}/>
+                                <PresetGroup label="Week" presets={presets?.week}/>
+                                </>
+                            }
                         </select>
                     </fieldset>
                     <div className="formButtons">

@@ -107,7 +107,7 @@ function useSafeFetch<T>(
 
             } catch (unknownThrown) {
                 const error = toError(unknownThrown);
-                // if (error.name === "AbortError") return;
+                if (error.name === "AbortError") return;
                 dispatch({type: "setError", error});
             }
         };
