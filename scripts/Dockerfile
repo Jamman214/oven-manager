@@ -1,5 +1,5 @@
 # Start from a generic and stable ARMv6 OS image
-FROM arm32v6/alpine:latest
+FROM alpine:latest
 
 # Install Python and Pip using Alpine's package manager
 RUN apk add --no-cache python3 py3-pip gcc musl-dev python3-dev

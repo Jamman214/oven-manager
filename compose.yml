@@ -3,37 +3,49 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
-    platform: linux/arm/v6
     image: jamman214/oven-manager-backend:1.0.0
     restart: unless-stopped
     env_file:
       - .env
     volumes:
       - shared_data:/app/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
 
   frontend:
     build:
       context: .
-      dockerfile: ./frontend/Dockerfile
-    platform: linux/arm/v6
+      dockerfile: ./nginx/Dockerfile
     image: jamman214/oven-manager-frontend:1.0.0
     restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
       - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
 
   worker:
     build:
       context: .
       dockerfile: ./scripts/Dockerfile
-    platform: linux/arm/v6
     image: jamman214/oven-manager-worker:1.0.0
     restart: unless-stopped
     env_file:
       - .env
     volumes:
       - shared_data:/app/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
 
 volumes:
   shared_data:

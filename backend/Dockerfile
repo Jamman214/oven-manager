@@ -1,5 +1,5 @@
 # Start from a generic and stable ARMv6 OS image
-FROM arm32v6/alpine:latest
+FROM alpine:latest
 
 # Install Python, Pip, and Git (Gunicorn might need it)
 RUN apk add --no-cache python3 py3-pip git

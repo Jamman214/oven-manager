@@ -5,9 +5,13 @@ from zoneinfo import ZoneInfo
 import schedule
 import logging
 import atexit
-import RPi.GPIO as GPIO
 import sys
 import signal
+try:
+    import RPi.GPIO as GPIO
+    ON_PI = True
+except (ImportError, RuntimeError):
+    ON_PI = False
 
 tz = ZoneInfo("Europe/London")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -174,17 +178,30 @@ class DatabaseHandler():
 
 
 class GpioHandler():
+    @staticmethod
+    def require_pi(default=None):
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                if not ON_PI:
+                    return default
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+    @require_pi()
     def handle_cleanup(self):
         GPIO.cleanup()
 
+    @require_pi({})
     def get_temperatures(self):
-        # TODO
         temps = None
+        # TODO
         if temps is None:
             logging.error(f"Temperature read failed")
             return {}
         return dict(temps)
     
+    @require_pi()
     def set_relays(self, core_on, oven_on):
         # TODO
         pass
