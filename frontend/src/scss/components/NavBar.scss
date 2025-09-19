@@ -1,5 +1,4 @@
-@import "../colours.scss";
-@import "../breakpoints.scss";
+@use "../colours.scss";
 
 $breakpoint: 28rem;
 $toggle-mode: $breakpoint;
@@ -45,7 +44,7 @@ $navbar-height: 4rem;
 .navbar-brand {    
     font-size: var(--font-size-xl);
     line-height: 1;
-    color: $white;
+    color: colours.$white;
     text-decoration: none;
 
     flex-shrink: 1;
@@ -61,7 +60,6 @@ $toggle-size: calc(var(--font-size-xl) + (2 * var(--padding-sm)));
     padding: 0px;
 
     background: var(--background-color);
-    // border: 10px solid white;
     border: var(--border);
     border-radius: var(--border-radius);
 

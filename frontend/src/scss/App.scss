@@ -1,27 +1,24 @@
-// @import "bootstrap/scss/functions";
-// @import "bootstrap/scss/variables";
-// @import "bootstrap/scss/mixins";
-// @import "bootstrap/scss/bootstrap";
-@import "./colours";
-@import "./components/FloatingInput.scss";
-@import "./components/EditableDropdown.scss";
+@use 'sass:math';
+@use "./colours";
+@use "./components/FloatingInput.scss";
+@use "./components/EditableDropdown.scss";
 
 :root {
-    --text-color: #{$gray-500};
-    --text-hover-color: #{$gray-300};
-    --text-active-color: #{$white};
+    --text-color: #{colours.$gray-500};
+    --text-hover-color: #{colours.$gray-300};
+    --text-active-color: #{colours.$white};
 
-    --background-color: #{$gray-900};
-    --background-hover-color: #{$gray-800};
+    --background-color: #{colours.$gray-900};
+    --background-hover-color: #{colours.$gray-800};
 
-    --border-color: #{$gray-500};
+    --border-color: #{colours.$gray-500};
     --border-width: .175rem;
     --border: var(--border-width) solid var(--border-color);
     --border-radius: .5rem;
 
-    --overlay-background-color: #{$gray-800};
-    --overlay-background-hover-color: #{$gray-700};
-    --overlay-border-color: #{$gray-400};
+    --overlay-background-color: #{colours.$gray-800};
+    --overlay-background-hover-color: #{colours.$gray-700};
+    --overlay-border-color: #{colours.$gray-400};
     --overlay-border: var(--border-width) solid var(--overlay-border-color);
 
     --padding-xs: .25rem;
@@ -34,15 +31,15 @@
     --font-size-lg: 1.25rem;
     --font-size-xl: 1.5rem;
 
-    --accent-background: #{$orange-600};
-    --accent-background-hover: #{$orange-500};
+    --accent-background: #{colours.$orange-600};
+    --accent-background-hover: #{colours.$orange-500};
 
-    --accent-shadow-hover: #{$orange-800};
-    --accent-shadow-active: #{$orange-700};
+    --accent-shadow-hover: #{colours.$orange-800};
+    --accent-shadow-active: #{colours.$orange-700};
 
-    --accent-border: #{$orange-500};
-    --accent-border-hover: #{$orange-400};
-    --accent-border-active: #{$orange-300};
+    --accent-border: #{colours.$orange-500};
+    --accent-border-hover: #{colours.$orange-400};
+    --accent-border-active: #{colours.$orange-300};
 }
 
 $font-family-sans-serif:
@@ -65,7 +62,7 @@ $font-family-sans-serif:
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !default;
 
 body {
-    background: $gray-900;
+    background: colours.$gray-900;
     margin: 0px;
     font-family: $font-family-sans-serif;
 }
@@ -82,7 +79,7 @@ input, select {
     padding-left: var(--padding-md);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
-    color: $white;
+    color: colours.$white;
 
     outline: none;
     -webkit-tap-highlight-color: transparent; // prevents grey box appearing on safari
@@ -96,7 +93,7 @@ input:focus, select:focus {
 }
 
 .formButton {
-    color: $white;
+    color: colours.$white;
     background: var(--accent-background);
     border: 1px solid var(--accent-border);
     border-radius: var(--border-radius);
@@ -120,12 +117,12 @@ input:focus, select:focus {
 } 
 
 .error {
-    border: 1px solid $red-300;
+    border: 1px solid colours.$red-300;
     border-radius: var(--border-radius);
     
-    color: $red-300;
+    color: colours.$red-300;
     
-    background: $red-900;
+    background: colours.$red-900;
 
     padding: var(--padding-sm) var(--padding-md) var(--padding-sm) var(--padding-md);
 }
@@ -138,7 +135,7 @@ form {
     width: clamp(0px, calc(100% - (2 * var(--padding-md))), 25rem);
     margin: auto;
 
-    color: $white;
+    color: colours.$white;
 
     fieldset {
         padding: 0px;
@@ -239,14 +236,14 @@ form {
     }
 }
 
-$switch-ratio: 3/1.7;  //  x/y
+$switch-ratio: math.div(3, 1.7);  //  x/y
 $switch-width: 3.5rem;
 $switch-padding: 0.25rem;
 
-$switch-height: $switch-width / $switch-ratio;
-$switch-radius: $switch-height / 2;
+$switch-height: math.div($switch-width, $switch-ratio);
+$switch-radius: math.div($switch-height, 2);
 $toggle-diameter: $switch-height - (2 * $switch-padding);
-$toggle-radius: $toggle-diameter / 2;
+$toggle-radius: math.div($toggle-diameter, 2);
 $toggle-transform: $switch-width - (2 * ($toggle-radius + $switch-padding));
 
 
@@ -265,8 +262,8 @@ $toggle-transform: $switch-width - (2 * ($toggle-radius + $switch-padding));
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: $gray-600;
-        border: 1px solid $gray-700;
+        background-color: colours.$gray-600;
+        border: 1px solid colours.$gray-700;
         -webkit-transition: .4s;
         transition: .4s;
 
@@ -299,13 +296,13 @@ $toggle-transform: $switch-width - (2 * ($toggle-radius + $switch-padding));
 
         &:focus + .slider,
         &:hover + .slider {
-            background: $gray-500;
-            border-color: $gray-800;
-            box-shadow: 0px 0px 10px 5px $gray-800;
+            background: colours.$gray-500;
+            border-color: colours.$gray-800;
+            box-shadow: 0px 0px 10px 5px colours.$gray-800;
         }
         &:active + .slider {
-            border-color: $gray-800;
-            box-shadow: 0px 0px 10px 5px $gray-700;
+            border-color: colours.$gray-800;
+            box-shadow: 0px 0px 10px 5px colours.$gray-700;
         }
 
         &:checked {
