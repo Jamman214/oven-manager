@@ -19,7 +19,7 @@ services:
     build:
       context: .
       dockerfile: ./nginx/Dockerfile
-    image: jamman214/oven-manager-frontend:1.0.0
+    image: jamman214/oven-manager-nginx:1.0.0
     restart: unless-stopped
     ports:
       - "80:80"
