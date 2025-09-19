@@ -2,7 +2,7 @@
 FROM arm32v6/alpine:latest
 
 # Install Python and Pip using Alpine's package manager
-RUN apk add --no-cache python3 py3-pip
+RUN apk add --no-cache python3 py3-pip gcc musl-dev python3-dev
 
 # Set the working directory inside the container
 WORKDIR /app

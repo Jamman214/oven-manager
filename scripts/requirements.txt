@@ -1,1 +1,4 @@
+logging==0.4.9.6
+RPi.GPIO==0.7.1
+schedule==1.2.2
 tzdata==2025.2

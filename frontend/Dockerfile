@@ -17,7 +17,6 @@ COPY frontend/. .
 # Run the build command to generate static files
 RUN npm run build
 
-
 # --- Stage 2: The "Final Image" ---
 # Use a lightweight Nginx server to host the static files
 FROM arm32v6/nginx:alpine
