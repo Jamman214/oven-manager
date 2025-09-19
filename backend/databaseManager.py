@@ -11,15 +11,6 @@ class DatabaseManager():
     db_name = "/app/data/temperatures_and_presets.db"
 
     @staticmethod
-    def init_db():
-        if 'db' not in g:
-            g.db = sqlite3.connect(
-                DatabaseManager.db_name,
-                detect_types=sqlite3.PARSE_DECLTYPES
-            )
-            g.db.row_factory = sqlite3.Row
-
-    @staticmethod
     def get_db():
         if 'db' not in g:
             g.db = sqlite3.connect(
