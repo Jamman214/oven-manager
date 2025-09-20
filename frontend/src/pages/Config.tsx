@@ -1,5 +1,5 @@
 import {
-    formSchema, apiSchema, toApi, fromApi, initialFormValues, allPresetsSchema, type FormInput, type FormOutput, type ApiInput
+    formSchema, apiSchema, toApi, fromApi, type FormInput, type FormOutput, type ApiInput
 } from "../../validation/config.tsx"
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
@@ -11,38 +11,17 @@ import { usePostJson } from "../hooks/usePostJSON.tsx";
 
 import { useMemo, useEffect, useState } from "react";
 
+import { PresetOptions } from "../components/PresetOptions.tsx";
 import { SubmitButton } from "../components/SubmitButton.tsx";
 
-interface Preset {
-    id: number;
-    name: string;
-}
-interface PresetGroupProps {
-    label: string;
-    presets: Preset[];
-}
-function PresetGroup ({label, presets}: PresetGroupProps) {
-    if (!presets.length) return null;
-    return <optgroup label={label}>
-        {
-            presets.map(
-                (preset) => (
-                    <option 
-                        key={preset.id} 
-                        value={preset.id.toString()}
-                    >
-                        {preset.name}
-                    </option>  
-                )
-            )
-        }
-    </optgroup>
-}
+import { upToWeekPresetsSchema } from "../../validation/presets.tsx"
 
 function Config() {
     const [rawPresets, _presetsLoading, _presetsError] = useGetJson(
-        "/api/get/presets/all",
-        allPresetsSchema
+        "/api/get/presets/combination",
+        upToWeekPresetsSchema,
+        {},
+        { combination: "7" }
     )
 
     const presets = useMemo(
@@ -56,7 +35,7 @@ function Config() {
     )
 
     const currentPreset = useMemo(
-        () => rawCurrentPreset ? fromApi(rawCurrentPreset) : initialFormValues,
+        () => rawCurrentPreset ? fromApi(rawCurrentPreset) : {},
         [rawCurrentPreset]
     )
 
@@ -71,7 +50,6 @@ function Config() {
 
     const methods = useForm<FormInput, unknown, FormOutput>({
         resolver: zodResolver(formSchema),
-        values: currentPreset,
         mode: "onBlur",
     })
 
@@ -103,12 +81,7 @@ function Config() {
                         <legend className="group-label">Active Preset</legend>
                         <select {...register("id")}>
                             {
-                                formStateLoaded && <>
-                                <option value="0">Off</option> 
-                                <PresetGroup label="Atomic" presets={presets?.atomic}/>
-                                <PresetGroup label="Day" presets={presets?.day}/>
-                                <PresetGroup label="Week" presets={presets?.week}/>
-                                </>
+                                formStateLoaded && <PresetOptions presets={presets}/>
                             }
                         </select>
                     </fieldset>

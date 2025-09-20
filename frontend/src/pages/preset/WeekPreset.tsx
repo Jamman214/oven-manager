@@ -1,4 +1,4 @@
-import { useState, Fragment } from "react";
+import { useState, Fragment, useMemo } from "react";
 import { 
     useFormContext, 
 } from "react-hook-form";
@@ -6,7 +6,6 @@ import { z } from "zod"
 
 import { useGetJson } from "../../hooks/useGetJSON.tsx";
 
-import { Dropdown, type Item } from "../../components/Dropdown.tsx";
 import { ErrorAlert } from "../../components/ErrorAlert.tsx";
 import { SubmitButton} from "../../components/SubmitButton.tsx";
 
@@ -24,13 +23,15 @@ import {
 } from "../../../validation/preset/weekPreset.tsx"
 
 import CreateOrEdit from "./CreateOrEdit.tsx";
+import { upToDayPresetsSchema } from "../../../validation/presets.tsx";
+import { PresetOptions  } from "../../components/PresetOptions.tsx";
 
 interface PresetProps {
     index: number;
-    options: Item[];
+    presets: z.infer<typeof upToDayPresetsSchema>;
 }
 
-function Preset ({index, options}: PresetProps) {
+function Preset ({index, presets}: PresetProps) {
     const {
         register,
         formState: { errors, touchedFields, isSubmitted },
@@ -41,12 +42,10 @@ function Preset ({index, options}: PresetProps) {
     const showError = touchedFields.preset?.[index] || isSubmitted;
 
     return <>
-        <Dropdown
-            options={options}
-            initial="Select a Preset"
-            disableInitial={false}
-            {...register(path)}
-        />
+        <select {...register(path)}>
+            <option value="">Select a Preset</option>
+            <PresetOptions presets={presets}/>
+        </select>
         <ErrorAlert 
             error={
                 showError && errors.preset?.[index]?.message
@@ -56,14 +55,16 @@ function Preset ({index, options}: PresetProps) {
 }
 
 function FormFields() {
-    const [data, _isLoading, _error] = useGetJson<{id: number, name: string}[]>(
-        "/api/get/presets/day",
-        z.array(z.object({
-            id: z.number().min(0),
-            name: z.string().min(1)
-        }))
+    const [data, _isLoading, _error] = useGetJson(
+        "/api/get/presets/combination",
+        upToDayPresetsSchema,
+        {},
+        {combination: "3"}
     )
-    const options = data || [];
+    const presets = useMemo(
+        () => data || {"atomic": [], "day": []},
+        [data]
+    )
 
     return (
         <fieldset>
@@ -71,7 +72,7 @@ function FormFields() {
                     
             {days.map((field, index) => 
                 <Fragment key={field}>
-                    <Preset index={index} options={options}/>
+                    <Preset index={index} presets={presets}/>
                 </Fragment>
             )}
         </fieldset>

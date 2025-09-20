@@ -30,15 +30,4 @@ const initialFormValues = {
     id: "0",
 } as const
 
-const presetSchema = z.object({
-    id: z.number().min(1),
-    name: z.string().min(1)
-})
-
-const allPresetsSchema = z.object({
-    "atomic": z.array(presetSchema),
-    "day": z.array(presetSchema),
-    "week": z.array(presetSchema)
-})
-
-export {formSchema, apiSchema, toApi, fromApi, initialFormValues, allPresetsSchema, type FormInput, type FormOutput, type ApiInput, type ApiOutput};
+export {formSchema, apiSchema, toApi, fromApi, initialFormValues, type FormInput, type FormOutput, type ApiInput, type ApiOutput};

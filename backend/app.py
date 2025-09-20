@@ -31,16 +31,24 @@ def get_presets_week():
     presets = PresetManager.get_week_presets()
     return jsonify(presets)
 
-@app.route("/get/presets/all", methods=["GET"])
-def get_presets_all():
-    atomic_presets = PresetManager.get_atomic_presets()
-    day_presets = PresetManager.get_day_presets()
-    week_presets = PresetManager.get_week_presets()
-    presets = {
-        'atomic': atomic_presets,
-        'day': day_presets,
-        'week': week_presets
-    }
+@app.route("/get/presets/combination", methods=["GET"])
+def get_presets_combination():
+    combination = request.args.get('combination', type=int)
+    if (not combination) or (combination < 1 or combination > 7):
+        return "Invalid id", 400
+
+    presets = {}
+
+    if combination >= 4:
+        presets['week'] = PresetManager.get_week_presets()
+        combination -= 4
+    if combination >= 2:
+        presets['day'] = PresetManager.get_day_presets()
+        combination -= 2
+    if combination >= 1:
+        presets['atomic'] = PresetManager.get_atomic_presets()
+        combination -= 1
+
     return jsonify(presets)
 
 

@@ -38,7 +38,7 @@ const apiSchema = z.object({
     ...requiredApiFields.shape,
     preset: 
         z.array(
-            z.number().min(1)
+            z.number().int().min(0)
         ),
     time: 
         z.array(

@@ -14,7 +14,7 @@ const formSchema = z.object({
 type FormInput = z.input<typeof formSchema>
 type FormOutput = z.infer<typeof formSchema>
 
-const apiIdSchema = z.number().int().min(1)
+const apiIdSchema = z.number().int().min(0)
 
 const apiSchema = z.object({
     ...requiredApiFields.shape,

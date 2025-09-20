@@ -1,13 +1,11 @@
-import { useState, Fragment } from "react";
+import { useState, Fragment, useMemo } from "react";
 import { 
     useFieldArray, 
     useFormContext, 
 } from "react-hook-form";
-import { z } from "zod"
 
 import { useGetJson } from "../../hooks/useGetJSON.tsx";
 
-import { Dropdown, type Item } from "../../components/Dropdown.tsx";
 import { ErrorAlert } from "../../components/ErrorAlert.tsx";
 import { SubmitButton} from "../../components/SubmitButton.tsx";
 
@@ -23,6 +21,9 @@ import {
 } from "../../../validation/preset/dayPreset.tsx"
 
 import CreateOrEdit from "./CreateOrEdit.tsx";
+import { upToAtomicPresetsSchema } from "../../../validation/presets.tsx";
+import { PresetOptions } from "../../components/PresetOptions.tsx";
+import { z } from "zod";
 
 interface TimeProps {
     index: number
@@ -61,10 +62,10 @@ function Time ({index}: TimeProps) {
 
 interface PresetProps {
     index: number;
-    options: Item[];
+    presets: z.infer<typeof upToAtomicPresetsSchema>;
 }
 
-function Preset ({index, options}: PresetProps) {
+function Preset ({index, presets}: PresetProps) {
     const {
         register,
         formState: { errors, touchedFields, isSubmitted },
@@ -72,19 +73,16 @@ function Preset ({index, options}: PresetProps) {
     } = useFormContext<FormInput>();
 
     const path = `preset.${index}.value` as const
-
-    const {onChange, ...otherRegister} = register(path)
+    const onChange = () => trigger(path);
 
     const showError = touchedFields.preset?.[index]?.value || isSubmitted;
 
+
     return <>
-        <Dropdown
-            options={options}
-            initial="Select a Preset"
-            disableInitial={false}
-            onChange={(e) => {onChange(e); trigger(path)}}
-            {...otherRegister}
-        />
+        <select {...register(path, {onChange})}>
+            <option value="">Select a Preset</option>
+            <PresetOptions presets={presets}/>
+        </select>
         <ErrorAlert 
             error={
                 showError && errors.preset?.[index]?.value?.message
@@ -98,14 +96,16 @@ interface FormFieldsProps {
 }
 
 function FormFields({presetFields} : FormFieldsProps) {
-    const [data, _isLoading, _error] = useGetJson<{id: number, name: string}[]>(
-        "/api/get/presets/atomic",
-        z.array(z.object({
-            id: z.number().min(0),
-            name: z.string().min(1)
-        }))
+    const [data, _isLoading, _error] = useGetJson(
+        "/api/get/presets/combination",
+        upToAtomicPresetsSchema,
+        {},
+        { combination: "1" } // 1 represents just atomic presets
     )
-    const options = data || [];
+    const presets = useMemo(
+        () => data || {"atomic": []},
+        [data]
+    )
 
     return (
         <fieldset>
@@ -117,7 +117,7 @@ function FormFields({presetFields} : FormFieldsProps) {
                         index > 0 && 
                         <Time index={index-1}/>
                     }
-                    <Preset index={index} options={options}/>
+                    <Preset index={index} presets={presets}/>
                 </Fragment>
             )}
         </fieldset>

@@ -48,14 +48,11 @@ class AtomicPresetSchemas():
         'temperature': _temperature
     }))
 
-class DayPresetSchemas():
-    _max_preset_id = 10 # Is this necessary? Could be implemented with triggers later
-    
+class DayPresetSchemas():    
     _preset = ConstraintSchema(
         int, 
         filter_fn = lambda x: 
-            (x > 0) 
-            and (x <= DayPresetSchemas._max_preset_id)
+            (x >= 0) 
     )
 
     _hour = ConstraintSchema(int, filter_fn=lambda x : (x >= 0) and (x <= 24))
@@ -109,14 +106,11 @@ class DayPresetSchemas():
         filter_fn = lambda x: len(x['preset']) == len(x['time']) + 1
     )
 
-class WeekPresetSchemas():
-    _max_preset_id = 10 # Is this necessary? Could be implemented with triggers later
-    
+class WeekPresetSchemas():   
     _preset = ConstraintSchema(
         int, 
         filter_fn = lambda x: 
-            (x > 0) 
-            and (x <= DayPresetSchemas._max_preset_id)
+            (x >= 0) 
     )
 
     _presets = ConstraintSchema(
