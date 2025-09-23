@@ -1,4 +1,4 @@
-# IOT Oven Temperature Controller
+# IoT Oven Temperature Controller
 A full-stack application to add web-based temperature control and scheduling to an AGA oven using a Raspberry Pi.
 
 ## The Problem
